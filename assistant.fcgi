@@ -11,7 +11,7 @@ from flup.server.fcgi import WSGIServer
 sys.path.append('../pymachining/')
 
 import pymachining as pm
-from drilling import drill_assistant_main, drill_assistant_header
+from drilling import drill_assistant_main, drill_assistant_header, drill_assistant_graphs
 
 Q_ = pm.getQ()
 
@@ -93,13 +93,13 @@ def main(env, form):
         drill_assistant_main(env, form)
     else:
         d = {'machine': None,
-           'operation': None,
-           'stock_mat': None,
-           'tool_mat': None,
-           'input_units': None,
-           'output_units': None,
-           'drill_diam': None,
-           'hole_depth': None}
+             'operation': None,
+             'stock_mat': None,
+             'tool_mat': None,
+             'input_units': None,
+             'output_units': None,
+             'drill_diam': None,
+             'hole_depth': None}
         print('<body>')
         drill_assistant_header(d, d)
         print('</body>')
@@ -119,31 +119,45 @@ def application(environ, start_response):
     request_body = environ['wsgi.input'].read()
     d = urllib.parse.parse_qs(request_body)
     form = {k.decode('utf-8'): v[0].decode('utf-8').strip() for k, v in d.items()}
-    print('<html>')
-    print_head()
-    print_header()
-    try:
-        # main(env, form)
-        main(form, form)
-    except:
-        print('\n\n<pre>')
-        traceback.print_exc()
-        print('\n\n</pre>')
-    print_footer()
-    print('</html>')
-    html = sys.stdout.getvalue()
 
-    sys.stdout = saved_stdout
+    op = form['operation'] if 'operation' in form else None
+    if op.startswith('drilling_graph'):
+        html = sys.stdout.getvalue()
 
-    response_header = [('Content-type', 'text/html')]
-    start_response(status, response_header)
+        drill_assistant_graphs(env, form)
 
-    yield html.encode('utf-8')
+        sys.stdout = saved_stdout
+
+        response_header = [('Content-type', 'image/png')]
+        start_response(status, response_header)
+
+        yield html.encode('utf-8')
+    else:
+        print('<html>')
+        print_head()
+        print_header()
+        try:
+            # main(env, form)
+            main(form, form)
+        except:
+            print('\n\n<pre>')
+            traceback.print_exc()
+            print('\n\n</pre>')
+        print_footer()
+        print('</html>')
+        html = sys.stdout.getvalue()
+
+        sys.stdout = saved_stdout
+
+        response_header = [('Content-type', 'text/html')]
+        start_response(status, response_header)
+
+        yield html.encode('utf-8')
 
 
 def start_test(environ, start_response):
     env = {'machine': 'PM25MV_DMMServo',
-           'operation': 'drilling',
+           'operation': 'drilling_graph1',
            'stock_mat': 'aluminum',
            'tool_mat': 'hss',
            'input_units': 'imperial',

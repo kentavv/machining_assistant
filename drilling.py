@@ -1,5 +1,7 @@
 #!/home/dh_6i8v7b/.local/share/virtualenvs/pymachining-iAFu6bf3/bin/python
 
+import urllib
+
 import cv2
 import numpy as np
 
@@ -230,72 +232,12 @@ def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
 
     if True:
         print('<p>')
-
-        def a():
-            fn = 'ops/drilling1.png'
-            pos = {'name': ((220, 185), (352, 202)),
-                   'spindle_speed': ((196, 374), (326, 374 + 26)),
-                   'surface_speed': ((196, 419), (326, 419 + 26)),
-                   'plunge_feedrate': ((196, 464), (326, 464 + 26)),
-                   'feed_per_revolution': ((196, 509), (326, 509 + 26)),
-                   'retract_feedrate': ((196, 555), (326, 555 + 26))}
-            # import os
-            # print(os.getcwd())
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            img = cv2.imread(fn)
-            if spindle_limited:
-                c = {'name': (0, 0, 255),
-                     'spindle_speed': (0, 0, 255),
-                     'surface_speed': (255, 0, 0),
-                     'plunge_feedrate': (255, 0, 0),
-                     'feed_per_revolution': (0, 0, 255),
-                     'retract_feedrate': (0, 0, 255)}
-            else:
-                c = {'name': (0, 0, 255),
-                     'spindle_speed': (255, 0, 0),
-                     'surface_speed': (0, 0, 255),
-                     'plunge_feedrate': (255, 0, 0),
-                     'feed_per_revolution': (0, 0, 255),
-                     'retract_feedrate': (0, 0, 255)}
-            cv2.putText(img, f'{drill_diam.m_as("in"):.4f}in drill', (pos['name'][0][0] + 3, pos['name'][1][1] - 3), font, .5, c['name'], 1, cv2.LINE_AA)
-            cv2.putText(img, f'{spindle_rpm.m_as("rpm"):.0f} rpm', (pos['spindle_speed'][0][0] + 3, pos['spindle_speed'][1][1] - 8), font, .5, c['spindle_speed'], 1, cv2.LINE_AA)
-            cv2.putText(img, f'{sfm.m_as("ft * rpm"):.2f} ft/min', (pos['surface_speed'][0][0] + 3, pos['surface_speed'][1][1] - 8), font, .5, c['surface_speed'], 1, cv2.LINE_AA)
-            cv2.putText(img, f'{plunge_feedrate.m_as("inch / minute"):.2f} in/min', (pos['plunge_feedrate'][0][0] + 3, pos['plunge_feedrate'][1][1] - 8), font, .5,
-                        c['plunge_feedrate'], 1, cv2.LINE_AA)
-            cv2.putText(img, f'{feed_per_revolution.m_as("inch / turn"):.4f} in', (pos['feed_per_revolution'][0][0] + 3, pos['feed_per_revolution'][1][1] - 8), font, .5,
-                        c['feed_per_revolution'], 1, cv2.LINE_AA)
-            cv2.putText(img, 'max', (pos['retract_feedrate'][0][0] + 3, pos['retract_feedrate'][1][1] - 8), font, .5, (0, 0, 255), 1, cv2.LINE_AA)
-            cv2.rectangle(img, pos['name'][0], pos['name'][1], c['name'], 1)
-            cv2.rectangle(img, pos['spindle_speed'][0], pos['spindle_speed'][1], c['spindle_speed'], 1)
-            cv2.rectangle(img, pos['surface_speed'][0], pos['surface_speed'][1], c['surface_speed'], 1)
-            cv2.rectangle(img, pos['plunge_feedrate'][0], pos['plunge_feedrate'][1], c['plunge_feedrate'], 1)
-            cv2.rectangle(img, pos['feed_per_revolution'][0], pos['feed_per_revolution'][1], c['feed_per_revolution'], 1)
-            cv2.rectangle(img, pos['retract_feedrate'][0], pos['retract_feedrate'][1], c['retract_feedrate'], 1)
-            rv, img_str = cv2.imencode('.jpg', img)
-            print(embed_png(img_str))
-
-        def b():
-            fn = 'ops/drilling2.png'
-            img = cv2.imread(fn)
-            rv, img_str = cv2.imencode('.png', img)
-            print(embed_png(img_str))
-
-        def c():
-            fn = 'ops/drilling3.png'
-            img = cv2.imread(fn)
-            rv, img_str = cv2.imencode('.png', img)
-            print(embed_png(img_str))
-
-        def d():
-            fn = 'ops/drilling4.png'
-            img = cv2.imread(fn)
-            rv, img_str = cv2.imencode('.jpg', img)
-            print(embed_png(img_str))
-
-        a()
-        # b()
-        # c()
-        d()
+        ss = f'{spindle_limited}\t{drill_diam.m_as("in"):.4f}in drill\t{spindle_rpm.m_as("rpm"):.0f} rpm\t{sfm.m_as("ft * rpm"):.2f} ft/min\t{plunge_feedrate.m_as("inch / minute")}\t{feed_per_revolution.m_as("inch / turn"):.4f} in'
+        ss = urllib.parse.quote_plus(ss)
+        print(f'<img src="/machining_assistant/assistant.fcgi?op=drilling_graph1&amp;args={ss}>')
+        # print('<img src="/machining_assistant/assistant.fcgi?op=drilling_graph2">')
+        # print('<img src="/machining_assistant/assistant.fcgi?op=drilling_graph3">')
+        print('<img src="/machining_assistant/assistant.fcgi?op=drilling_graph4">')
         print('</p>')
 
     print('<h2>Operation analysis</h2>')
@@ -485,11 +427,8 @@ def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
 
     if True:
         print('<h2>Capacity</h2>')
-
-        img_str = m.plot_torque_speed_curve(highlight_power=P, highlight_rpm=spindle_rpm, embed=True, full_title=False)
-        print(embed_png(img_str), '<br>')
-        img_str = tool.plot_thrust(stock_material, highlight=m.max_feed_force, embed=True)
-        print(embed_png(img_str))
+        print('<img src="/machining_assistant/assistant.fcgi?op=drilling_graph5"><br>')
+        print('<img src="/machining_assistant/assistant.fcgi?op=drilling_graph6">')
 
 
 def drill_assistant_main(env, form):
@@ -559,3 +498,101 @@ def drill_assistant_main(env, form):
         print('<body>')
         drill_assistant_header(d0, d)
         print('</body>')
+
+
+def drill_graph1(args):
+    ss = args.split('\t')
+    spindle_limited, drill_diam, spindle_rpm, sfm, plunge_feedrate, feed_per_revolution = ss
+
+    fn = 'ops/drilling1.png'
+    pos = {'name': ((220, 185), (352, 202)),
+           'spindle_speed': ((196, 374), (326, 374 + 26)),
+           'surface_speed': ((196, 419), (326, 419 + 26)),
+           'plunge_feedrate': ((196, 464), (326, 464 + 26)),
+           'feed_per_revolution': ((196, 509), (326, 509 + 26)),
+           'retract_feedrate': ((196, 555), (326, 555 + 26))}
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    img = cv2.imread(fn)
+    if spindle_limited:
+        c = {'name': (0, 0, 255),
+             'spindle_speed': (0, 0, 255),
+             'surface_speed': (255, 0, 0),
+             'plunge_feedrate': (255, 0, 0),
+             'feed_per_revolution': (0, 0, 255),
+             'retract_feedrate': (0, 0, 255)}
+    else:
+        c = {'name': (0, 0, 255),
+             'spindle_speed': (255, 0, 0),
+             'surface_speed': (0, 0, 255),
+             'plunge_feedrate': (255, 0, 0),
+             'feed_per_revolution': (0, 0, 255),
+             'retract_feedrate': (0, 0, 255)}
+    cv2.putText(img, drill_diam, (pos['name'][0][0] + 3, pos['name'][1][1] - 3), font, .5, c['name'], 1, cv2.LINE_AA)
+    cv2.putText(img, spindle_rpm, (pos['spindle_speed'][0][0] + 3, pos['spindle_speed'][1][1] - 8), font, .5, c['spindle_speed'], 1, cv2.LINE_AA)
+    cv2.putText(img, sfm, (pos['surface_speed'][0][0] + 3, pos['surface_speed'][1][1] - 8), font, .5, c['surface_speed'], 1, cv2.LINE_AA)
+    cv2.putText(img, plunge_feedrate, (pos['plunge_feedrate'][0][0] + 3, pos['plunge_feedrate'][1][1] - 8), font, .5,
+                c['plunge_feedrate'], 1, cv2.LINE_AA)
+    cv2.putText(img, feed_per_revolution, (pos['feed_per_revolution'][0][0] + 3, pos['feed_per_revolution'][1][1] - 8), font, .5,
+                c['feed_per_revolution'], 1, cv2.LINE_AA)
+    cv2.putText(img, 'max', (pos['retract_feedrate'][0][0] + 3, pos['retract_feedrate'][1][1] - 8), font, .5, (0, 0, 255), 1, cv2.LINE_AA)
+    cv2.rectangle(img, pos['name'][0], pos['name'][1], c['name'], 1)
+    cv2.rectangle(img, pos['spindle_speed'][0], pos['spindle_speed'][1], c['spindle_speed'], 1)
+    cv2.rectangle(img, pos['surface_speed'][0], pos['surface_speed'][1], c['surface_speed'], 1)
+    cv2.rectangle(img, pos['plunge_feedrate'][0], pos['plunge_feedrate'][1], c['plunge_feedrate'], 1)
+    cv2.rectangle(img, pos['feed_per_revolution'][0], pos['feed_per_revolution'][1], c['feed_per_revolution'], 1)
+    cv2.rectangle(img, pos['retract_feedrate'][0], pos['retract_feedrate'][1], c['retract_feedrate'], 1)
+    rv, img_str = cv2.imencode('.png', img)
+    print(img_str)
+
+
+def drill_graph2():
+    # fn = 'ops/drilling2.png'
+    # img = cv2.imread(fn)
+    # rv, img_str = cv2.imencode('.png', img)
+    # print(embed_png(img_str))
+    pass
+
+
+def drill_graph3():
+    # fn = 'ops/drilling3.png'
+    # img = cv2.imread(fn)
+    # rv, img_str = cv2.imencode('.png', img)
+    # print(embed_png(img_str))
+    pass
+
+
+def drill_graph4():
+    # fn = 'ops/drilling4.png'
+    # img = cv2.imread(fn)
+    # rv, img_str = cv2.imencode('.jpg', img)
+    # print(embed_png(img_str))
+    pass
+
+
+def drill_graph5():
+    # img_str = m.plot_torque_speed_curve(highlight_power=P, highlight_rpm=spindle_rpm, embed=True, full_title=False)
+    pass
+
+
+def drill_graph6():
+    # img_str = tool.plot_thrust(stock_material, highlight=m.max_feed_force, embed=True)
+    pass
+
+
+def drill_assistant_graphs(env, form):
+    d0 = {}
+    d0['operation'] = env['operation'] if 'operation' in env else None
+    d0['args'] = env['args'] if 'args' in env else None
+
+    if d0['operation'] == 'drilling_graph1':
+        drill_graph1(d0['args'])
+    elif d0['operation'] == 'drilling_graph2':
+        pass
+    elif d0['operation'] == 'drilling_graph3':
+        pass
+    elif d0['operation'] == 'drilling_graph4':
+        pass
+    elif d0['operation'] == 'drilling_graph5':
+        pass
+    elif d0['operation'] == 'drilling_graph6':
+        pass
