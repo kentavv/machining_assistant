@@ -11,7 +11,7 @@ from flup.server.fcgi import WSGIServer
 sys.path.append('../pymachining/')
 
 import pymachining as pm
-from drilling import drill_assistant_main
+from drilling import drill_assistant_main, drill_assistant_header
 
 Q_ = pm.getQ()
 
@@ -91,6 +91,10 @@ def main(env, form):
     op = env['operation'] if 'operation' in env else None
     if op == 'drilling':
         drill_assistant_main(env, form)
+    else:
+        print('<body>')
+        drill_assistant_header({}, {})
+        print('</body>')
 
 
 def application(environ, start_response):
