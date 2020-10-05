@@ -8,6 +8,8 @@ import urllib.parse
 
 from flup.server.fcgi import WSGIServer
 
+sys.path.append('../pymachining/')
+
 import pymachining as pm
 from drilling import drill_assistant_main
 
