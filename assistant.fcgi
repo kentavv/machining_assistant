@@ -1,16 +1,18 @@
 #!/home/dh_6i8v7b/.local/share/virtualenvs/pymachining-iAFu6bf3/bin/python
 
-import sys
-import urllib.parse
-import io
-import cgi
-import numpy as np
-import pymachining as pm
-from flup.server.fcgi import WSGIServer
-import traceback
-import re
-import cv2
 import base64
+import io
+import os
+import re
+import sys
+import traceback
+import urllib.parse
+
+import cv2
+import numpy as np
+from flup.server.fcgi import WSGIServer
+
+import pymachining as pm
 
 Q_ = pm.getQ()
 
@@ -750,4 +752,7 @@ def start_test(environ, start_response):
 
 
 if __name__ == '__main__':
-    WSGIServer(application).run()
+    if os.getenv('MA_LOCAL'):
+        start_test({}, {})
+    else:
+        WSGIServer(application).run()
