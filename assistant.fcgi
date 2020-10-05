@@ -76,7 +76,7 @@ def print_head():
 
 def print_header():
     print('<h1>Machining Assistant</h1>')
-    print('<p>Return to <a href="https://kvvcreates.com/pymachining/assistant.fcgi">Machining Assistant</a> or <a href="https://kvvcreates.com">KvvCreates</a></p>')
+    print('<p>Return to <a href="https://kvvcreates.com/machining_assistant/assistant.fcgi">Machining Assistant</a> or <a href="https://kvvcreates.com">KvvCreates</a></p>')
 
 
 def print_footer():
@@ -92,8 +92,16 @@ def main(env, form):
     if op == 'drilling':
         drill_assistant_main(env, form)
     else:
+        d = {'machine': None,
+           'operation': None,
+           'stock_mat': None,
+           'tool_mat': None,
+           'input_units': None,
+           'output_units': None,
+           'drill_diam': None,
+           'hole_depth': None}
         print('<body>')
-        drill_assistant_header({}, {})
+        drill_assistant_header(d, d)
         print('</body>')
 
 

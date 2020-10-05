@@ -10,7 +10,7 @@ Q_ = pm.getQ()
 
 
 def drill_assistant_header(env, d):
-    print(f'<form action="/pymachining/assistant.fcgi" method="post">'
+    print(f'<form action="/machining_assistant/assistant.fcgi" method="post">'
           f'<table class="styled-table">'
           f'<tr>'
           f'<td><label for="machine">Machine:</label></td>'
