@@ -12,7 +12,7 @@ Q_ = pm.getQ()
 
 
 def drill_assistant_header(env, d):
-    print(f'<form action="/machining_assistant/assistant.fcgi" method="post">'
+    print(f'<form action="/machining_assistant/assistant.fcgi?operation=drilling" method="post">'
           f'<table class="styled-table">'
           f'<tr>'
           f'<td><label for="machine">Machine:</label></td>'
@@ -20,16 +20,6 @@ def drill_assistant_header(env, d):
     v = [('PM25MV', 'PM25MV'), ('PM25MV_DMMServo', 'PM25MV DMMServo'), ('PM25MV_HS', 'PM25MV HS')]
     for a, b in v:
         s = ' selected' if (a == env['machine'] or a == 'PM25MV_DMMServo' and env['machine'] is None) else ''
-        print('    <option value="' + a + '"' + s + '>' + b + '</option>')
-    print(f'</select></td>'
-          f'</tr>'
-          f''
-          f'<tr>'
-          f'<td><label for="operation">Operation:</label></td>'
-          f'<td><select ' + ('style="color:#ff0000" ' if env['operation'] != d['operation'] else '') + 'id="operation" name="operation">')
-    v = [('drilling', 'Drilling')]
-    for a, b in v:
-        s = ' selected' if a == env['operation'] else ''
         print('    <option value="' + a + '"' + s + '>' + b + '</option>')
     print(f'</select></td>'
           f'</tr>'
@@ -234,10 +224,10 @@ def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
         print('<p>')
         ss = f'{spindle_limited}\t{drill_diam.m_as("in"):.4f}in drill\t{spindle_rpm.m_as("rpm"):.0f} rpm\t{sfm.m_as("ft * rpm"):.2f} ft/min\t{plunge_feedrate.m_as("inch / minute"):.2f} in/min\t{feed_per_revolution.m_as("inch / turn"):.4f} in'
         ss = urllib.parse.quote_plus(ss)
-        print(f'<img src="/machining_assistant/assistant.fcgi?operation=drilling_graph1&amp;args={ss}">')
-        # print('<img src="/machining_assistant/assistant.fcgi?operation=drilling_graph2">')
-        # print('<img src="/machining_assistant/assistant.fcgi?operation=drilling_graph3">')
-        print('<img src="/machining_assistant/assistant.fcgi?operation=drilling_graph4">')
+        print(f'<img src="/machining_assistant/assistant.fcgi?operation=drilling&amp;graph=graph1&amp;args={ss}">')
+        # print('<img src="/machining_assistant/assistant.fcgi?operation=drilling&amp;graph=graph2">')
+        # print('<img src="/machining_assistant/assistant.fcgi?operation=drilling&amp;graph=graph3">')
+        print('<img src="/machining_assistant/assistant.fcgi?operation=drilling&amp;graph=graph4">')
         print('</p>')
 
     print('<h2>Operation analysis</h2>')
@@ -429,16 +419,15 @@ def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
         print('<h2>Capacity</h2>')
         args = f'{m.name}\t{P}\t{spindle_rpm}'
         args = urllib.parse.quote_plus(args)
-        print(f'<img src="/machining_assistant/assistant.fcgi?operation=drilling_graph5&amp;args={args}"><br>')
+        print(f'<img src="/machining_assistant/assistant.fcgi?operation=drilling&amp;graph=graph5&amp;args={args}"><br>')
         args = f'{material_name}\t{m.max_feed_force}\t{drill_diam}'
         args = urllib.parse.quote_plus(args)
-        print(f'<img src="/machining_assistant/assistant.fcgi?operation=drilling_graph6&amp;args={args}">')
+        print(f'<img src="/machining_assistant/assistant.fcgi?operation=drilling&amp;graph=graph6&amp;args={args}">')
 
 
 def drill_assistant_main(env, form):
     d0 = {}
     d0['machine'] = env['machine'] if 'machine' in env else None
-    d0['operation'] = env['operation'] if 'operation' in env else None
     d0['stock_mat'] = env['stock_mat'] if 'stock_mat' in env else None
     d0['tool_mat'] = env['tool_mat'] if 'tool_mat' in env else None
     #    d0['input_units'] = env['input_units'] if 'input_units' in env else None
@@ -451,9 +440,6 @@ def drill_assistant_main(env, form):
 
     if d['machine'] not in ['PM25MV', 'PM25MV_DMMServo', 'PM25MV_HS']:
         d['machine'] = None
-
-    if d['operation'] not in ['drilling']:
-        d['operation'] = None
 
     if d['stock_mat'] not in ['aluminum', '6061', 'steel', 'steel-mild', '12l14', 'steel-medium', 'steel-high']:
         d['stock_mat'] = None
@@ -479,7 +465,6 @@ def drill_assistant_main(env, form):
     if (d['machine'] is not None
             and d['stock_mat'] is not None
             and d['tool_mat'] is not None
-            and d['operation'] is not None
             and d['drill_diam'] is not None
             and d['hole_depth'] is not None):
         print('<body>')
@@ -608,19 +593,19 @@ def drill_graph6(args):
 
 def drill_assistant_graphs(env, form):
     d0 = {}
-    d0['operation'] = env['operation'] if 'operation' in env else None
+    d0['graph'] = env['graph'] if 'graph' in env else None
     d0['args'] = env['args'] if 'args' in env else None
 
-    if d0['operation'] == 'drilling_graph1':
+    if d0['graph'] == 'graph1':
         return drill_graph1(d0['args'])
-    elif d0['operation'] == 'drilling_graph2':
+    elif d0['graph'] == 'graph2':
         return drill_graph2(d0['args'])
-    elif d0['operation'] == 'drilling_graph3':
+    elif d0['graph'] == 'graph3':
         return drill_graph3(d0['args'])
-    elif d0['operation'] == 'drilling_graph4':
+    elif d0['graph'] == 'graph4':
         return drill_graph4(d0['args'])
-    elif d0['operation'] == 'drilling_graph5':
+    elif d0['graph'] == 'graph5':
         return drill_graph5(d0['args'])
-    elif d0['operation'] == 'drilling_graph6':
+    elif d0['graph'] == 'graph6':
         return drill_graph6(d0['args'])
     return None

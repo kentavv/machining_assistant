@@ -89,82 +89,63 @@ def print_footer():
 
 
 def main(env, form):
-    # What are the Fusion 360 settings for...
-
     op = env['operation'] if 'operation' in env else None
     if op == 'drilling':
-        drill_assistant_main(env, form)
+        drill_assistant_main(form, form)
     else:
-        d = {'machine': None,
-             'operation': None,
-             'stock_mat': None,
-             'tool_mat': None,
-             'input_units': None,
-             'output_units': None,
-             'drill_diam': None,
-             'hole_depth': None}
-        print('<body>')
-        drill_assistant_header(d, d)
-        print('</body>')
+        print(f'<body>'
+              f'<h1>Select an operation</h1>'
+              f'<p><a href="assistant.fcgi?operation=drilling">Drilling</a></p>'
+              f'</body>')
+
+
+def application_main(environ, start_response):
+    status = '200 OK'
+
+    d = urllib.parse.parse_qs(environ['QUERY_STRING'])
+    env = {k: v[0].strip() for k, v in d.items()}
+
+    request_body = environ['wsgi.input'].read()
+    d = urllib.parse.parse_qs(request_body)
+    form = {k.decode('utf-8'): v[0].decode('utf-8').strip() for k, v in d.items()}
+    
+    graph = env['graph'] if 'graph' in env else None
+    op = env['operation'] if 'operation' in env else None
+    if op == 'drilling' and graph is not None:
+        img = drill_assistant_graphs(env, form)
+        response_header = [('Content-type', 'image/png')]
+        start_response(status, response_header)
+        return img
+    else:
+        saved_stdout = sys.stdout
+
+        sys.stdout = io.StringIO()
+        sys.stderr = sys.stdout
+
+        print('<html>')
+        print_head()
+        print_header()
+        try:
+            main(env, form)
+        except:
+            print('\n\n<pre>')
+            traceback.print_exc()
+            print('\n\n</pre>')
+        print_footer()
+        print('</html>')
+        html = sys.stdout.getvalue()
+
+        sys.stdout = saved_stdout
+
+        response_header = [('Content-type', 'text/html')]
+        start_response(status, response_header)
+
+        return html.encode('utf-8')
 
 
 def application(environ, start_response):
     try:
-        status = '200 OK'
-
-        d = urllib.parse.parse_qs(environ['QUERY_STRING'])
-        env = {k: v[0].strip() for k, v in d.items()}
-
-        request_body = environ['wsgi.input'].read()
-        d = urllib.parse.parse_qs(request_body)
-        form = {k.decode('utf-8'): v[0].decode('utf-8').strip() for k, v in d.items()}
-        op = env['operation'] if 'operation' in env else None
-        if op is not None and op.startswith('drilling_graph'):
-            if False:
-                saved_stdout = sys.stdout
-
-                sys.stdout = io.StringIO()
-                sys.stderr = sys.stdout
-                img = drill_assistant_graphs(env, form)
-                html = sys.stdout.getvalue()
-
-                sys.stdout = saved_stdout
-
-                response_header = [('Content-type', 'text/html')]
-                start_response(status, response_header)
-
-                yield html.encode('utf-8')
-            else:
-                img = drill_assistant_graphs(env, form)
-                response_header = [('Content-type', 'image/png')]
-                start_response(status, response_header)
-                yield img
-        else:
-            saved_stdout = sys.stdout
-
-            sys.stdout = io.StringIO()
-            sys.stderr = sys.stdout
-
-            print('<html>')
-            print_head()
-            print_header()
-            try:
-                # main(env, form)
-                main(form, form)
-            except:
-                print('\n\n<pre>')
-                traceback.print_exc()
-                print('\n\n</pre>')
-            print_footer()
-            print('</html>')
-            html = sys.stdout.getvalue()
-
-            sys.stdout = saved_stdout
-
-            response_header = [('Content-type', 'text/html')]
-            start_response(status, response_header)
-
-            yield html.encode('utf-8')
+        yield application_main(environ, start_response)
     except Exception:
         import traceback
         fn = f'exception_{os.getpid()}.txt'
