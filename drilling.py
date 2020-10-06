@@ -572,7 +572,7 @@ def drill_graph4(args):
 
 def drill_graph5(args):
     ss = args.split('\t')
-    #print(ss)
+    # print(ss)
     machine, P, spindle_rpm = ss
     u, v = P.split(maxsplit=1)
     P = Q_(float(u), v)

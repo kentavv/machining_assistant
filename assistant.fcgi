@@ -1,7 +1,7 @@
 #!/home/dh_6i8v7b/.local/share/virtualenvs/pymachining-iAFu6bf3/bin/python
 
-#import cgitb
-#cgitb.enable()
+# import cgitb
+# cgitb.enable()
 
 import io
 import os
@@ -109,23 +109,54 @@ def main(env, form):
 
 
 def application(environ, start_response):
-  try:
-    status = '200 OK'
+    try:
+        status = '200 OK'
 
-    d = urllib.parse.parse_qs(environ['QUERY_STRING'])
-    env = {k: v[0].strip() for k, v in d.items()}
+        d = urllib.parse.parse_qs(environ['QUERY_STRING'])
+        env = {k: v[0].strip() for k, v in d.items()}
 
-    request_body = environ['wsgi.input'].read()
-    d = urllib.parse.parse_qs(request_body)
-    form = {k.decode('utf-8'): v[0].decode('utf-8').strip() for k, v in d.items()}
-    op = env['operation'] if 'operation' in env else None
-    if op is not None and op.startswith('drilling_graph'):
-        if False:
+        request_body = environ['wsgi.input'].read()
+        d = urllib.parse.parse_qs(request_body)
+        form = {k.decode('utf-8'): v[0].decode('utf-8').strip() for k, v in d.items()}
+        op = env['operation'] if 'operation' in env else None
+        if op is not None and op.startswith('drilling_graph'):
+            if False:
+                saved_stdout = sys.stdout
+
+                sys.stdout = io.StringIO()
+                sys.stderr = sys.stdout
+                img = drill_assistant_graphs(env, form)
+                html = sys.stdout.getvalue()
+
+                sys.stdout = saved_stdout
+
+                response_header = [('Content-type', 'text/html')]
+                start_response(status, response_header)
+
+                yield html.encode('utf-8')
+            else:
+                img = drill_assistant_graphs(env, form)
+                response_header = [('Content-type', 'image/png')]
+                start_response(status, response_header)
+                yield img
+        else:
             saved_stdout = sys.stdout
 
             sys.stdout = io.StringIO()
             sys.stderr = sys.stdout
-            img = drill_assistant_graphs(env, form)
+
+            print('<html>')
+            print_head()
+            print_header()
+            try:
+                # main(env, form)
+                main(form, form)
+            except:
+                print('\n\n<pre>')
+                traceback.print_exc()
+                print('\n\n</pre>')
+            print_footer()
+            print('</html>')
             html = sys.stdout.getvalue()
 
             sys.stdout = saved_stdout
@@ -134,79 +165,47 @@ def application(environ, start_response):
             start_response(status, response_header)
 
             yield html.encode('utf-8')
-        else:
-            img = drill_assistant_graphs(env, form)
-            response_header = [('Content-type', 'image/png')]
-            start_response(status, response_header)
-            yield img
-    else:
-        saved_stdout = sys.stdout
+    except Exception:
+        import traceback
+        fn = f'exception_{os.getpid()}.txt'
+        with open(fn, 'w') as f:
+            # print(f'env: {env}', file=f)
+            # print(f'\n\nform: {form}', file=f)
+            print(f'environ: {environ}', file=f)
 
-        sys.stdout = io.StringIO()
-        sys.stderr = sys.stdout
+            exc_type, exc_value, exc_traceback = sys.exc_info()
 
-        print('<html>')
-        print_head()
-        print_header()
-        try:
-            # main(env, form)
-            main(form, form)
-        except:
-            print('\n\n<pre>')
-            traceback.print_exc()
-            print('\n\n</pre>')
-        print_footer()
-        print('</html>')
-        html = sys.stdout.getvalue()
+            # print("\n\n*** print_tb:", file=f)
+            # traceback.print_tb(exc_traceback, file=f)
 
-        sys.stdout = saved_stdout
+            print("\n\n*** print_exception:", file=f)
+            # exc_type below is ignored on 3.5 and later
+            traceback.print_exception(exc_type, exc_value, exc_traceback, file=f)
 
+            # print("\n\n*** print_exc:", file=f)
+            # traceback.print_exc(file=f)
+
+            # print("\n\n*** format_exc, first and last line:", file=f)
+            # formatted_lines = traceback.format_exc().splitlines()
+            # print(formatted_lines[0], file=f)
+            # print(formatted_lines[-1], file=f)
+
+            # print("\n\n*** format_exception:", file=f)
+            ## exc_type below is ignored on 3.5 and later
+            # print(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)), file=f)
+
+            # print("\n\n*** extract_tb:", file=f)
+            # print(repr(traceback.extract_tb(exc_traceback)), file=f)
+
+            # print("\n\n*** format_tb:", file=f)
+            # print(repr(traceback.format_tb(exc_traceback)), file=f)
+
+            # print("\n\n*** tb_lineno:", exc_traceback.tb_lineno, file=f)
+
+        status = '500 Internal Server Error'
         response_header = [('Content-type', 'text/html')]
         start_response(status, response_header)
-
-        yield html.encode('utf-8')
-  except Exception:
-     import traceback
-     fn = f'exception_{os.getpid()}.txt'
-     with open(fn, 'w') as f:
-      #print(f'env: {env}', file=f)
-      #print(f'\n\nform: {form}', file=f)
-      print(f'environ: {environ}', file=f)
-
-      exc_type, exc_value, exc_traceback = sys.exc_info()
-
-      #print("\n\n*** print_tb:", file=f)
-      #traceback.print_tb(exc_traceback, file=f)
-
-      print("\n\n*** print_exception:", file=f)
-      # exc_type below is ignored on 3.5 and later
-      traceback.print_exception(exc_type, exc_value, exc_traceback, file=f)
-
-      #print("\n\n*** print_exc:", file=f)
-      #traceback.print_exc(file=f)
-
-      #print("\n\n*** format_exc, first and last line:", file=f)
-      #formatted_lines = traceback.format_exc().splitlines()
-      #print(formatted_lines[0], file=f)
-      #print(formatted_lines[-1], file=f)
-
-      #print("\n\n*** format_exception:", file=f)
-      ## exc_type below is ignored on 3.5 and later
-      #print(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)), file=f)
-
-      #print("\n\n*** extract_tb:", file=f)
-      #print(repr(traceback.extract_tb(exc_traceback)), file=f)
-
-      #print("\n\n*** format_tb:", file=f)
-      #print(repr(traceback.format_tb(exc_traceback)), file=f)
-
-      #print("\n\n*** tb_lineno:", exc_traceback.tb_lineno, file=f)
-
-
-     status = '500 Internal Server Error'
-     response_header = [('Content-type', 'text/html')]
-     start_response(status, response_header)
-     yield ''
+        yield ''
 
 
 def start_test(environ, start_response):
