@@ -169,6 +169,10 @@ def application(environ, start_response):
      import traceback
      fn = f'exception_{os.getpid()}.txt'
      with open(fn, 'w') as f:
+      #print(f'env: {env}', file=f)
+      #print(f'\n\nform: {form}', file=f)
+      print(f'environ: {environ}', file=f)
+
       exc_type, exc_value, exc_traceback = sys.exc_info()
 
       #print("\n\n*** print_tb:", file=f)
