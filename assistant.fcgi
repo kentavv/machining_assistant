@@ -1,5 +1,8 @@
 #!/home/dh_6i8v7b/.local/share/virtualenvs/pymachining-iAFu6bf3/bin/python
 
+import cgitb
+cgitb.enable()
+
 import io
 import os
 import sys
@@ -108,11 +111,6 @@ def main(env, form):
 def application(environ, start_response):
     status = '200 OK'
 
-    saved_stdout = sys.stdout
-
-    sys.stdout = io.StringIO()
-    sys.stderr = sys.stdout
-
     d = urllib.parse.parse_qs(environ['QUERY_STRING'])
     env = {k: v[0].strip() for k, v in d.items()}
 
@@ -120,19 +118,33 @@ def application(environ, start_response):
     d = urllib.parse.parse_qs(request_body)
     form = {k.decode('utf-8'): v[0].decode('utf-8').strip() for k, v in d.items()}
 
-    op = form['operation'] if 'operation' in form else None
-    if op.startswith('drilling_graph'):
-        html = sys.stdout.getvalue()
+    op = env['operation'] if 'operation' in env else None
+    if op is not None and op.startswith('drilling_graph'):
+        if False:
+            saved_stdout = sys.stdout
 
-        drill_assistant_graphs(env, form)
+            sys.stdout = io.StringIO()
+            sys.stderr = sys.stdout
+            img = drill_assistant_graphs(env, form)
+            html = sys.stdout.getvalue()
 
-        sys.stdout = saved_stdout
+            sys.stdout = saved_stdout
 
-        response_header = [('Content-type', 'image/png')]
-        start_response(status, response_header)
+            response_header = [('Content-type', 'text/html')]
+            start_response(status, response_header)
 
-        yield html.encode('utf-8')
+            yield html.encode('utf-8')
+        else:
+            img = drill_assistant_graphs(env, form)
+            response_header = [('Content-type', 'image/png')]
+            start_response(status, response_header)
+            yield img
     else:
+        saved_stdout = sys.stdout
+
+        sys.stdout = io.StringIO()
+        sys.stderr = sys.stdout
+
         print('<html>')
         print_head()
         print_header()
@@ -170,7 +182,7 @@ def start_test(environ, start_response):
     print_head()
     print_header()
 
-    main(env, form)
+    main(env, env)
 
     print_footer()
     print('</html>')

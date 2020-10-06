@@ -232,12 +232,12 @@ def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
 
     if True:
         print('<p>')
-        ss = f'{spindle_limited}\t{drill_diam.m_as("in"):.4f}in drill\t{spindle_rpm.m_as("rpm"):.0f} rpm\t{sfm.m_as("ft * rpm"):.2f} ft/min\t{plunge_feedrate.m_as("inch / minute")}\t{feed_per_revolution.m_as("inch / turn"):.4f} in'
+        ss = f'{spindle_limited}\t{drill_diam.m_as("in"):.4f}in drill\t{spindle_rpm.m_as("rpm"):.0f} rpm\t{sfm.m_as("ft * rpm"):.2f} ft/min\t{plunge_feedrate.m_as("inch / minute"):.2f} in/min\t{feed_per_revolution.m_as("inch / turn"):.4f} in'
         ss = urllib.parse.quote_plus(ss)
-        print(f'<img src="/machining_assistant/assistant.fcgi?op=drilling_graph1&amp;args={ss}>')
-        # print('<img src="/machining_assistant/assistant.fcgi?op=drilling_graph2">')
-        # print('<img src="/machining_assistant/assistant.fcgi?op=drilling_graph3">')
-        print('<img src="/machining_assistant/assistant.fcgi?op=drilling_graph4">')
+        print(f'<img src="/machining_assistant/assistant.fcgi?operation=drilling_graph1&amp;args={ss}">')
+        # print('<img src="/machining_assistant/assistant.fcgi?operation=drilling_graph2">')
+        # print('<img src="/machining_assistant/assistant.fcgi?operation=drilling_graph3">')
+        print('<img src="/machining_assistant/assistant.fcgi?operation=drilling_graph4">')
         print('</p>')
 
     print('<h2>Operation analysis</h2>')
@@ -427,8 +427,12 @@ def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
 
     if True:
         print('<h2>Capacity</h2>')
-        print('<img src="/machining_assistant/assistant.fcgi?op=drilling_graph5"><br>')
-        print('<img src="/machining_assistant/assistant.fcgi?op=drilling_graph6">')
+        args = f'{m.name}\t{P}\t{spindle_rpm}'
+        args = urllib.parse.quote_plus(args)
+        print(f'<img src="/machining_assistant/assistant.fcgi?operation=drilling_graph5&amp;args={args}"><br>')
+        args = f'{material_name}\t{m.max_feed_force}\t{drill_diam}'
+        args = urllib.parse.quote_plus(args)
+        print(f'<img src="/machining_assistant/assistant.fcgi?operation=drilling_graph6&amp;args={args}">')
 
 
 def drill_assistant_main(env, form):
@@ -513,7 +517,7 @@ def drill_graph1(args):
            'retract_feedrate': ((196, 555), (326, 555 + 26))}
     font = cv2.FONT_HERSHEY_SIMPLEX
     img = cv2.imread(fn)
-    if spindle_limited:
+    if spindle_limited == 'True':
         c = {'name': (0, 0, 255),
              'spindle_speed': (0, 0, 255),
              'surface_speed': (255, 0, 0),
@@ -542,41 +546,64 @@ def drill_graph1(args):
     cv2.rectangle(img, pos['feed_per_revolution'][0], pos['feed_per_revolution'][1], c['feed_per_revolution'], 1)
     cv2.rectangle(img, pos['retract_feedrate'][0], pos['retract_feedrate'][1], c['retract_feedrate'], 1)
     rv, img_str = cv2.imencode('.png', img)
-    print(img_str)
+    return img_str.tobytes()
 
 
-def drill_graph2():
-    # fn = 'ops/drilling2.png'
-    # img = cv2.imread(fn)
-    # rv, img_str = cv2.imencode('.png', img)
-    # print(embed_png(img_str))
-    pass
+def drill_graph2(args):
+    fn = 'ops/drilling2.png'
+    img = cv2.imread(fn)
+    rv, img_str = cv2.imencode('.png', img)
+    return img_str.tobytes()
 
 
-def drill_graph3():
-    # fn = 'ops/drilling3.png'
-    # img = cv2.imread(fn)
-    # rv, img_str = cv2.imencode('.png', img)
-    # print(embed_png(img_str))
-    pass
+def drill_graph3(args):
+    fn = 'ops/drilling3.png'
+    img = cv2.imread(fn)
+    rv, img_str = cv2.imencode('.png', img)
+    return img_str.tobytes()
 
 
-def drill_graph4():
-    # fn = 'ops/drilling4.png'
-    # img = cv2.imread(fn)
-    # rv, img_str = cv2.imencode('.jpg', img)
-    # print(embed_png(img_str))
-    pass
+def drill_graph4(args):
+    fn = 'ops/drilling4.png'
+    img = cv2.imread(fn)
+    rv, img_str = cv2.imencode('.jpg', img)
+    return img_str.tobytes()
 
 
-def drill_graph5():
-    # img_str = m.plot_torque_speed_curve(highlight_power=P, highlight_rpm=spindle_rpm, embed=True, full_title=False)
-    pass
+def drill_graph5(args):
+    ss = args.split('\t')
+    #print(ss)
+    machine, P, spindle_rpm = ss
+    u, v = P.split(maxsplit=1)
+    P = Q_(float(u), v)
+    u, v = spindle_rpm.split(maxsplit=1)
+    spindle_rpm = Q_(float(u), v)
+
+    if machine == 'PM25MV':
+        m = pm.MachinePM25MV()
+    elif machine == 'PM25MV_DMMServo':
+        m = pm.MachinePM25MV_DMMServo()
+    elif machine == 'PM25MV_HS':
+        m = pm.MachinePM25MV_HS()
+    else:
+        m = None
+
+    img_str = m.plot_torque_speed_curve(highlight_power=P, highlight_rpm=spindle_rpm, embed=True, full_title=False)
+
+    return img_str
 
 
-def drill_graph6():
-    # img_str = tool.plot_thrust(stock_material, highlight=m.max_feed_force, embed=True)
-    pass
+def drill_graph6(args):
+    ss = args.split('\t')
+    material_name, max_feed_force, drill_diam = ss
+    stock_material = pm.Material(material_name)
+    u, v = max_feed_force.split(maxsplit=1)
+    max_feed_force = Q_(float(u), v)
+    u, v = drill_diam.split(maxsplit=1)
+    drill_diam = Q_(float(u), v)
+    tool = pm.DrillHSSStub(drill_diam)
+    img_str = tool.plot_thrust(stock_material, highlight=max_feed_force, embed=True)
+    return img_str
 
 
 def drill_assistant_graphs(env, form):
@@ -585,14 +612,15 @@ def drill_assistant_graphs(env, form):
     d0['args'] = env['args'] if 'args' in env else None
 
     if d0['operation'] == 'drilling_graph1':
-        drill_graph1(d0['args'])
+        return drill_graph1(d0['args'])
     elif d0['operation'] == 'drilling_graph2':
-        pass
+        return drill_graph2(d0['args'])
     elif d0['operation'] == 'drilling_graph3':
-        pass
+        return drill_graph3(d0['args'])
     elif d0['operation'] == 'drilling_graph4':
-        pass
+        return drill_graph4(d0['args'])
     elif d0['operation'] == 'drilling_graph5':
-        pass
+        return drill_graph5(d0['args'])
     elif d0['operation'] == 'drilling_graph6':
-        pass
+        return drill_graph6(d0['args'])
+    return None
