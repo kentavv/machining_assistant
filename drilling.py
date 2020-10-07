@@ -535,13 +535,13 @@ def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
 
     print_machining_parameters(m, spindle_limited, spindle_rpm, max_spindle_rpm, requested_spindle_rpm, feed_per_revolution, sfm, material_sfm, plunge_feedrate, max_plunge_feedrate, drill_diam)
 
+    print_alternatives(m, stock_material, drill_diam, tool, op)
+
     print_operation_analysis(depth, drill_diam, sfm, material_sfm, spindle_limited, torque_limited, thrust_limited, plunge_limited, spindle_rpm, requested_spindle_rpm)
 
     print_machine_demands(thrust1, max_thrust, thrust2, spindle_limited, spindle_rpm, max_spindle_rpm, P, max_P, T, max_T, Q, op_time)
 
     print_specifications(stock_material, material_sfm, m, P, max_P, max_thrust, spindle_rpm, material_name, drill_diam)
-
-    print_alternatives(m, stock_material, drill_diam, tool, op)
 
 
 def drill_graph1(args):
