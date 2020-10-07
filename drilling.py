@@ -401,6 +401,92 @@ def print_specifications(stock_material, material_sfm, m, P, max_P, max_thrust, 
         print(f'<img src="/machining_assistant/assistant.fcgi?operation=drilling&amp;graph=graph6&amp;args={args}">')
 
 
+def print_alternatives(m, mat, diam, tool, op):
+    Vc_r = mat.sfm(tool.tool_material)
+    fr_r = tool.feed_rate(mat)
+
+    options = []
+    thrust = tool.thrust(mat)
+    for Vc in np.linspace(Vc_r * .01, Vc_r * 1.5, 20):
+        N = (Vc / (np.pi * diam)).to('rpm')
+        P_avail_cont = m.power_continuous(N)
+        P_avail_int = m.power_intermittent(N)
+        for fr in np.linspace(fr_r * .01, fr_r * 1.5, 20):
+            P_req = op.net_power(fr, N).to('watt')
+            thrust2 = tool.thrust2(mat, fr)
+            mrr = op.metal_removal_rate2(fr, Vc)
+            
+            if P_req < P_avail_cont:
+                if fr * N < m.max_z_rate:
+                    if m.min_rpm <= N <= m.max_rpm:
+                        options += [(Vc, fr, mrr)]
+    #             print(
+    #               Vc, fr, '\n',
+    #               fr * N, m.max_z_rate, '\n',
+    #               N, m.min_rpm, m.max_rpm, '\n',
+    #               P_req, P_avail_cont, P_avail_int, '\n',
+    #               thrust, thrust2, m.max_feed_force, '\n',
+    #              mrr.to('in ** 3 / min'))
+
+                  
+    print('<h2>Alternative machining parameters</h2>')
+    print(f'<table class="styled-table" id="alt_table">'
+          f'<thead>'
+          f'<tr>'
+          f'<th>MRR (in^3/min)</th>',
+          f'<th>% of Avail.<br>Power</th>'
+          f'<th>Vc (ft/min)<br>% of {Vc_r.m_as("ft * tpm"):.0f}</th>'
+          f'<th>fr (in/rev)<br>% of {fr_r.m_as("in / turn"):.4f}</th>'
+          f'<th>Zf (in/min)<br>% of {m.max_z_rate.m_as("in / min"):.0f}</th>'
+          f'<th>N (rpm)<br>% of {m.max_rpm.m_as("rpm"):.0f}</th>'
+          f'<th>Ff (lbs)<br>% of {m.max_feed_force.m_as("lbs"):.0f}</th>'
+          f'</tr>'
+          f'<tbody')
+    options = sorted(options, key=lambda x: x[2], reverse=True)
+    thrust = tool.thrust(mat)
+    for Vc, fr, _ in options[:100]:
+            N = (Vc / (np.pi * diam)).to('rpm')
+            P_avail_cont = m.power_continuous(N)
+            P_avail_int = m.power_intermittent(N)
+            P_req = op.net_power(fr, N).to('watt')
+            thrust2 = tool.thrust2(mat, fr)
+            mrr = op.metal_removal_rate2(fr, Vc)
+
+            print(f'<tr>'
+                  f'<td>{mrr.m_as("in ** 3 / min"):.2f}</td>'
+                  f'<td>{(P_req / P_avail_cont).m_as("") * 100:.0f}% ({P_req.m_as("watt"):.1f} W)</td>'
+                  f'<td>{Vc.m_as("ft * tpm"):.1f} ({(Vc / Vc_r).m_as("") * 100:.0f}%)</td>'
+                  f'<td>{fr.m_as("in / turn"):.4f} ({(fr / fr_r).m_as("") * 100:.0f}%)</td>'
+                  f'<td>{(fr * N).m_as("in / min"):.2f} ({((fr * N) / m.max_z_rate).m_as("") * 100:.0f}%)</td>'
+                  f'<td>{N.m_as("rpm"):.0f} ({(N / m.max_rpm).m_as("") * 100:.0f}%)</td>'
+                  f'<td>{thrust2.m_as("lbs"):.1f} ({(thrust2 / m.max_feed_force).m_as("") * 100:.0f}%)</td>'
+                  f'</tr>')
+            # print(f'<tr>'
+            #       f'<td>{mrr.m_as("in ** 3 / min"):.2f} in^3/min</td>'
+            #       f'<td>{Vc.m_as("ft * tpm"):.1f} ft/min ({(Vc / Vc_r).m_as("") * 100:.1f} %)</td>'
+            #       f'<td>{fr.m_as("in / turn"):.4f} in/rev ({(fr / fr_r).m_as("") * 100:.1f} %)</td>'
+            #       f'<td>{(fr * N).m_as("in / min"):.2f} in/min ({((fr * N) / m.max_z_rate).m_as("") * 100:.1f} %)</td>'
+            #       f'<td>{N.m_as("rpm"):.0f} rpm ({(N / m.max_rpm).m_as("") * 100:.1f} %)</td>'
+            #       f'<td>{P_req.m_as("watt"):.1f} W ({(P_req / P_avail_cont).m_as("") * 100:.1f} %)</td>'
+            #       f'<td>{thrust2.m_as("lbs"):.1f} lbs ({(thrust2 / m.max_feed_force).m_as("") * 100:.1f} %)</td>'
+            #       f'</tr>')
+    #         print(f'{mrr.m_as("in ** 3 / min"):.2f} in^3/min',
+    #               f' {Vc.m_as("ft * tpm"):.1f} ft/min ({(Vc / Vc_r).m_as("") * 100:.1f} %)',
+    #               f' {fr.m_as("in / turn"):.4f} in/rev ({(fr / fr_r).m_as("") * 100:.1f} %)',
+    #               f' {(fr * N).m_as("in / min"):.2f} in/min ({((fr * N) / m.max_z_rate).m_as("") * 100:.1f} %)',
+    #               f' {N.m_as("rpm"):.0f} rpm ({(N / m.max_rpm).m_as("") * 100:.1f} %)',
+    #               f' {P_req.m_as("watt"):.1f} W ({(P_req / P_avail_cont).m_as("") * 100:.1f} %)',
+    #               f' {thrust2.m_as("lbs"):.1f} lbs ({(thrust2 / m.max_feed_force).m_as("") * 100:.1f} %)')
+    #         print(f'{mrr.m_as("in ** 3 / min"):.2f} in^3/min',
+    #               f'Vc={Vc.m_as("ft * tpm"):.1f} ft/min ({(Vc / Vc_r).m_as("") * 100:.1f} %)',
+    #               f'fr={fr.m_as("in / turn"):.4f} in/rev ({(fr / fr_r).m_as("") * 100:.1f} %)',
+    #               f'Zf={(fr * N).m_as("in / min"):.2f} in/min < {m.max_z_rate.m_as("in / min"):.2f} in/min ({((fr * N) / m.max_z_rate).m_as("") * 100:.1f} %)',
+    #               f'N={N.m_as("rpm"):.0f} rpm {m.min_rpm.m_as("rpm"):.0f} rpm {m.max_rpm.m_as("rpm"):.0f} rpm ({(N / m.max_rpm).m_as("") * 100:.1f} %)',
+    #               f'P_req={P_req.m_as("watt"):.1f} W <= {P_avail_cont:.1f} {P_avail_int:.1f} ({(P_req / P_avail_cont).m_as("") * 100:.1f} %)',
+    #               f'Ff={thrust2.m_as("lbs"):.1f} lbs < {m.max_feed_force.m_as("lbs"):.1f} lbs ({(thrust2 / m.max_feed_force).m_as("") * 100:.1f} %)')
+
+    print('</tbody></table>')
+
 def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
     stock_material = pm.Material(material_name)
     tool = pm.DrillHSSStub(drill_diam)
@@ -454,6 +540,8 @@ def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
     print_machine_demands(thrust1, max_thrust, thrust2, spindle_limited, spindle_rpm, max_spindle_rpm, P, max_P, T, max_T, Q, op_time)
 
     print_specifications(stock_material, material_sfm, m, P, max_P, max_thrust, spindle_rpm, material_name, drill_diam)
+
+    print_alternatives(m, stock_material, drill_diam, tool, op)
 
 
 def drill_graph1(args):

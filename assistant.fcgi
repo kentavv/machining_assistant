@@ -80,6 +80,24 @@ def print_head():
     print('<title>Machining Assistant by KvvCreates, powered by PyMachining</title>')
     print_style()
     print('<script data-ad-client="ca-pub-8377109266905414" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>')
+    print('<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.22/css/jquery.dataTables.css">')
+    print('''
+        <script
+  src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+  integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs="
+  crossorigin="anonymous"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/plug-ins/1.10.21/sorting/natural.js"></script>''')
+    print('''<script>
+        $(document).ready( function () {
+    $("#alt_table").DataTable({
+        "order": [[ 0, "desc" ]],
+        "columnDefs": [
+        { targets: '_all', visible: true, "type": "natural" }
+    ]
+    });
+} );
+    </script>''')
     print('</head>')
 
 
