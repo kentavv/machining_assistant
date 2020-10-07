@@ -96,61 +96,22 @@ def drill_assistant_header(env, d):
           f'</form>')
 
 
-def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
-    stock_material = pm.Material(material_name)
-    tool = pm.DrillHSSStub(drill_diam)
-    op = pm.DrillOp(tool, stock_material)
+def per_warning2(v):
+    return ' (!!!)' if v > 100 else ''
 
-    sfm = stock_material.sfm(tool.tool_material)
-    material_sfm = sfm
 
-    feed_per_revolution = tool.feed_rate(stock_material)
-    max_spindle_rpm = m.max_rpm
-    requested_spindle_rpm = op.rrpm(sfm)
-    spindle_rpm = min(requested_spindle_rpm, max_spindle_rpm)
-    spindle_limited = False
-    if spindle_rpm < requested_spindle_rpm:
-        # SFM is now limited by the spindle RPM
-        sfm = (drill_diam * np.pi * spindle_rpm).to('foot * tpm')
-        spindle_limited = True
-    if spindle_rpm < m.min_rpm:
-        spindle_rpm = m.min_rpm
-        sfm = (drill_diam * np.pi * spindle_rpm).to('foot * tpm')
-        spindle_limited = True
-        # May now exceed the material SFM
+def per_warning(v):
+    return ' (!!!)' if v >= 100 else ' (!!)' if v >= 90 else ' (!)' if v >= 80 else ''
 
-    P = op.net_power(feed_per_revolution, spindle_rpm).to('watt')
-    max_P = m.power_continuous(spindle_rpm).to('watt')
-    Q = op.metal_removal_rate(feed_per_revolution, spindle_rpm)
-    T = op.torque(P.to('watt'), spindle_rpm)
-    max_T = m.torque_intermittent(spindle_rpm)
-    torque_limited = False
-    if T > max_T:
-        torque_limited = True
-    thrust1 = tool.thrust(stock_material).to('lbs')
-    thrust2 = tool.thrust2(stock_material, feed_per_revolution).to('lbs')
-    max_thrust = m.max_feed_force.to('lbs')
-    thrust_limited = False
-    if thrust1 > max_thrust:
-        thrust_limited = True
-    op_time = op.machining_time(depth, feed_per_revolution * spindle_rpm).to('min')
-    plunge_feedrate = (feed_per_revolution * spindle_rpm).to('inch / minute')
-    max_plunge_feedrate = m.max_z_rate
-    plunge_limited = False
-    if plunge_feedrate > max_plunge_feedrate:
-        plunge_limited = True
 
-    def per_warning2(v):
-        return ' (!!!)' if t_ > 100 else ''
-
-    def per_warning(v):
-        return ' (!!!)' if t_ >= 100 else ' (!!)' if t_ >= 90 else ' (!)' if t_ >= 80 else ''
-
+def print_introduction(drill_diam, depth, material_name):
     print('<h1>Drilling operation</h1>')
     print(f'<p>Summary: drilling a {drill_diam.m_as("in"):.3f}in hole {depth.m_as("in"):.3f}in deep into {material_name}.<br>')
     print(f'Summary: drilling a {drill_diam.m_as("mm"):.2f}mm hole {depth.m_as("mm"):.2f}mm deep into {material_name}.<br>')
     print(f'All estimates are based on <a href="https://www.notion.so/Drilling-724f1a6e27984f42be27ac6a63127e71">theory</a> and should not be taken as recommendations.</p>')
 
+
+def print_machining_parameters(m, spindle_limited, spindle_rpm, max_spindle_rpm, requested_spindle_rpm, feed_per_revolution, sfm, material_sfm, plunge_feedrate, max_plunge_feedrate, drill_diam):
     print('<h2>Machining parameters</h2>')
     print('''<p>Surface speed and feed per 
           revolution are preferred since these are most accessible from materials and tooling 
@@ -237,6 +198,8 @@ def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
         print('<img src="/machining_assistant/assistant.fcgi?operation=drilling&amp;graph=graph4">')
         print('</p>')
 
+
+def print_operation_analysis(depth, drill_diam, sfm, material_sfm, spindle_limited, torque_limited, thrust_limited, plunge_limited, spindle_rpm, requested_spindle_rpm):
     print('<h2>Operation analysis</h2>')
     print(f'<table class="styled-table">'
           f'<tbody>')
@@ -279,6 +242,8 @@ def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
     print(f'</tbody>'
           f'</table>')
 
+
+def print_machine_demands(thrust1, max_thrust, thrust2, spindle_limited, spindle_rpm, max_spindle_rpm, P, max_P, T, max_T, Q, op_time):
     print('<h2>Machine demands</h2>')
     print(f'<table class="styled-table">'
           f'<tbody>')
@@ -348,6 +313,8 @@ def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
     print(f'</tbody>'
           f'</table>')
 
+
+def print_specifications(stock_material, material_sfm, m, P, max_P, max_thrust, spindle_rpm, material_name, drill_diam):
     print('<h2>Specifications</h2>')
     print('<table class="styled-table">')
     print('<tbody>')
@@ -430,6 +397,61 @@ def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
         args = f'{material_name}\t{m.max_feed_force}\t{drill_diam}'
         args = urllib.parse.quote_plus(args)
         print(f'<img src="/machining_assistant/assistant.fcgi?operation=drilling&amp;graph=graph6&amp;args={args}">')
+
+
+def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
+    stock_material = pm.Material(material_name)
+    tool = pm.DrillHSSStub(drill_diam)
+    op = pm.DrillOp(tool, stock_material)
+
+    sfm = stock_material.sfm(tool.tool_material)
+    material_sfm = sfm
+
+    feed_per_revolution = tool.feed_rate(stock_material)
+    max_spindle_rpm = m.max_rpm
+    requested_spindle_rpm = op.rrpm(sfm)
+    spindle_rpm = min(requested_spindle_rpm, max_spindle_rpm)
+    spindle_limited = False
+    if spindle_rpm < requested_spindle_rpm:
+        # SFM is now limited by the spindle RPM
+        sfm = (drill_diam * np.pi * spindle_rpm).to('foot * tpm')
+        spindle_limited = True
+    if spindle_rpm < m.min_rpm:
+        spindle_rpm = m.min_rpm
+        sfm = (drill_diam * np.pi * spindle_rpm).to('foot * tpm')
+        spindle_limited = True
+        # May now exceed the material SFM
+
+    P = op.net_power(feed_per_revolution, spindle_rpm).to('watt')
+    max_P = m.power_continuous(spindle_rpm).to('watt')
+    Q = op.metal_removal_rate(feed_per_revolution, spindle_rpm)
+    T = op.torque(P.to('watt'), spindle_rpm)
+    max_T = m.torque_intermittent(spindle_rpm)
+    torque_limited = False
+    if T > max_T:
+        torque_limited = True
+    thrust1 = tool.thrust(stock_material).to('lbs')
+    thrust2 = tool.thrust2(stock_material, feed_per_revolution).to('lbs')
+    max_thrust = m.max_feed_force.to('lbs')
+    thrust_limited = False
+    if thrust1 > max_thrust:
+        thrust_limited = True
+    op_time = op.machining_time(depth, feed_per_revolution * spindle_rpm).to('min')
+    plunge_feedrate = (feed_per_revolution * spindle_rpm).to('inch / minute')
+    max_plunge_feedrate = m.max_z_rate
+    plunge_limited = False
+    if plunge_feedrate > max_plunge_feedrate:
+        plunge_limited = True
+
+    print_introduction(drill_diam, depth, material_name)
+
+    print_machining_parameters(m, spindle_limited, spindle_rpm, max_spindle_rpm, requested_spindle_rpm, feed_per_revolution, sfm, material_sfm, plunge_feedrate, max_plunge_feedrate, drill_diam)
+
+    print_operation_analysis(depth, drill_diam, sfm, material_sfm, spindle_limited, torque_limited, thrust_limited, plunge_limited, spindle_rpm, requested_spindle_rpm)
+
+    print_machine_demands(thrust1, max_thrust, thrust2, spindle_limited, spindle_rpm, max_spindle_rpm, P, max_P, T, max_T, Q, op_time)
+
+    print_specifications(stock_material, material_sfm, m, P, max_P, max_thrust, spindle_rpm, material_name, drill_diam)
 
 
 def drill_assistant_main(env, form):
