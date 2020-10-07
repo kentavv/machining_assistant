@@ -117,7 +117,7 @@ def main(env, form):
               f'<p><a href="assistant.fcgi?operation=drilling"><img src="ops/drilling.png" width="160px"><br>Drilling</a></p>'
               f'<br><br><br>'
               f'<h1>Favorite references</h1>'
-              f'<p>Amazon Affiliate links<br>'
+              f'<p>Disclosure: The links below are Amazon Affiliate links and I earn a small commission on the purchase at no cost to you. These items are items that I have purchased myself and recommend, including books that I would reread and tools that I enjoy using.<br>'
               f'{amazon_links_refs[0]}'
               f'{amazon_links_refs[1]}'
               f'{amazon_links_others[0]}'
