@@ -1,5 +1,6 @@
 #!/home/dh_6i8v7b/.local/share/virtualenvs/pymachining-iAFu6bf3/bin/python
 
+import random
 import urllib
 
 import cv2
@@ -7,6 +8,7 @@ import numpy as np
 
 import pymachining as pm
 from helper import *
+from amazon_links import *
 
 Q_ = pm.getQ()
 
@@ -106,8 +108,8 @@ def per_warning(v):
 
 def print_introduction(drill_diam, depth, material_name):
     print('<h1>Drilling operation</h1>')
-    print(f'<p>Summary: drilling a {drill_diam.m_as("in"):.3f}in hole {depth.m_as("in"):.3f}in deep into {material_name}.<br>')
-    print(f'Summary: drilling a {drill_diam.m_as("mm"):.2f}mm hole {depth.m_as("mm"):.2f}mm deep into {material_name}.<br>')
+    print(f'<p>Summary (imperial): Drill a {drill_diam.m_as("in"):.3f}in hole {depth.m_as("in"):.3f}in deep into {material_name}.<br>')
+    print(f'Summary (metric): Drill a {drill_diam.m_as("mm"):.2f}mm hole {depth.m_as("mm"):.2f}mm deep into {material_name}.<br>')
     print(f'All estimates are based on <a href="https://www.notion.so/Drilling-724f1a6e27984f42be27ac6a63127e71">theory</a> and should not be taken as recommendations.</p>')
 
 
@@ -454,70 +456,6 @@ def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
     print_specifications(stock_material, material_sfm, m, P, max_P, max_thrust, spindle_rpm, material_name, drill_diam)
 
 
-def drill_assistant_main(env, form):
-    d0 = {}
-    d0['machine'] = env['machine'] if 'machine' in env else None
-    d0['stock_mat'] = env['stock_mat'] if 'stock_mat' in env else None
-    d0['tool_mat'] = env['tool_mat'] if 'tool_mat' in env else None
-    #    d0['input_units'] = env['input_units'] if 'input_units' in env else None
-    #    d0['output_units'] = env['output_units'] if 'output_units' in env else None
-
-    d0['drill_diam'] = env['drill_diam'] if 'drill_diam' in env else None
-    d0['hole_depth'] = env['hole_depth'] if 'hole_depth' in env else None
-
-    d = dict(d0)
-
-    if d['machine'] not in ['PM25MV', 'PM25MV_DMMServo', 'PM25MV_HS']:
-        d['machine'] = None
-
-    if d['stock_mat'] not in ['aluminum', '6061', 'steel', 'steel-mild', '12l14', 'steel-medium', 'steel-high']:
-        d['stock_mat'] = None
-
-    if d['tool_mat'] not in ['carbide', 'hss']:
-        d['tool_mat'] = None
-
-    #    if d['input_units'] not in ['metric', 'imperial']:
-    #        d['input_units'] = None
-    #
-    #    if d['output_units'] not in ['metric', 'imperial']:
-    #        d['output_units'] = None
-
-    rv, d['drill_diam'] = parse_quant(d['drill_diam'])
-    if rv and d['drill_diam']:
-        if 'in' not in d0['drill_diam'] and 'mm' not in d0['drill_diam']:
-            d0['drill_diam'] += ' in'
-    rv, d['hole_depth'] = parse_quant(d['hole_depth'])
-    if rv and d['hole_depth']:
-        if 'in' not in d0['hole_depth'] and 'mm' not in d0['hole_depth']:
-            d0['hole_depth'] += ' in'
-
-    if (d['machine'] is not None
-            and d['stock_mat'] is not None
-            and d['tool_mat'] is not None
-            and d['drill_diam'] is not None
-            and d['hole_depth'] is not None):
-        print('<body>')
-        drill_assistant_header(d0, d)
-
-        if d['machine'] == 'PM25MV':
-            m = pm.MachinePM25MV()
-        elif d['machine'] == 'PM25MV_DMMServo':
-            m = pm.MachinePM25MV_DMMServo()
-        elif d['machine'] == 'PM25MV_HS':
-            m = pm.MachinePM25MV_HS()
-        else:
-            m = None
-        tool = d['drill_diam']
-        depth = d['hole_depth']
-        gen_graphs = False
-        drill_assistant(m, d['stock_mat'], tool, depth, gen_graphs)
-        print('</body>')
-    else:
-        print('<body>')
-        drill_assistant_header(d0, d)
-        print('</body>')
-
-
 def drill_graph1(args):
     ss = args.split('\t')
     spindle_limited, drill_diam, spindle_rpm, sfm, plunge_feedrate, feed_per_revolution = ss
@@ -620,6 +558,15 @@ def drill_graph6(args):
     return img_str
 
 
+def print_amazon_links():
+    # random.shuffle(amazon_links_drills)
+    print(f'<br><br><br>'
+          f'<h3>Favorite related tools</h3>'
+          f'<p>{amazon_disclosure}<br>'
+          f'{amazon_links_drills[2]}<br>'
+          f'{amazon_links_drills[1]}</p>')
+
+
 def drill_assistant_graphs(env, form):
     d0 = {}
     d0['graph'] = env['graph'] if 'graph' in env else None
@@ -638,3 +585,69 @@ def drill_assistant_graphs(env, form):
     elif d0['graph'] == 'graph6':
         return drill_graph6(d0['args'])
     return None
+
+
+def drill_assistant_main(env, form):
+    d0 = {}
+    d0['machine'] = env['machine'] if 'machine' in env else None
+    d0['stock_mat'] = env['stock_mat'] if 'stock_mat' in env else None
+    d0['tool_mat'] = env['tool_mat'] if 'tool_mat' in env else None
+    #    d0['input_units'] = env['input_units'] if 'input_units' in env else None
+    #    d0['output_units'] = env['output_units'] if 'output_units' in env else None
+
+    d0['drill_diam'] = env['drill_diam'] if 'drill_diam' in env else None
+    d0['hole_depth'] = env['hole_depth'] if 'hole_depth' in env else None
+
+    d = dict(d0)
+
+    if d['machine'] not in ['PM25MV', 'PM25MV_DMMServo', 'PM25MV_HS']:
+        d['machine'] = None
+
+    if d['stock_mat'] not in ['aluminum', '6061', 'steel', 'steel-mild', '12l14', 'steel-medium', 'steel-high']:
+        d['stock_mat'] = None
+
+    if d['tool_mat'] not in ['carbide', 'hss']:
+        d['tool_mat'] = None
+
+    #    if d['input_units'] not in ['metric', 'imperial']:
+    #        d['input_units'] = None
+    #
+    #    if d['output_units'] not in ['metric', 'imperial']:
+    #        d['output_units'] = None
+
+    rv, d['drill_diam'] = parse_quant(d['drill_diam'])
+    if rv and d['drill_diam']:
+        if 'in' not in d0['drill_diam'] and 'mm' not in d0['drill_diam']:
+            d0['drill_diam'] += ' in'
+    rv, d['hole_depth'] = parse_quant(d['hole_depth'])
+    if rv and d['hole_depth']:
+        if 'in' not in d0['hole_depth'] and 'mm' not in d0['hole_depth']:
+            d0['hole_depth'] += ' in'
+
+    if (d['machine'] is not None
+            and d['stock_mat'] is not None
+            and d['tool_mat'] is not None
+            and d['drill_diam'] is not None
+            and d['hole_depth'] is not None):
+        print('<body>')
+        drill_assistant_header(d0, d)
+
+        if d['machine'] == 'PM25MV':
+            m = pm.MachinePM25MV()
+        elif d['machine'] == 'PM25MV_DMMServo':
+            m = pm.MachinePM25MV_DMMServo()
+        elif d['machine'] == 'PM25MV_HS':
+            m = pm.MachinePM25MV_HS()
+        else:
+            m = None
+        tool = d['drill_diam']
+        depth = d['hole_depth']
+        gen_graphs = False
+        drill_assistant(m, d['stock_mat'], tool, depth, gen_graphs)
+        print_amazon_links()
+        print('</body>')
+    else:
+        print('<body>')
+        drill_assistant_header(d0, d)
+        print_amazon_links()
+        print('</body>')
