@@ -42,6 +42,10 @@ def print_style():
     padding: 12px 15px;
 }
 
+.styled-table td.small_td {
+        font-size: 0.7em;
+}
+
 .styled-table tbody tr {
     border-bottom: 1px solid #dddddd;
 }

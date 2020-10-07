@@ -162,11 +162,14 @@ def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
     print('<tbody>')
     print('<tr><td>Supplied to F360</td><td colspan="5"></td></tr>')
     if spindle_limited:
+        t_ = (spindle_rpm / max_spindle_rpm).m_as('') * 100
+        ts_ = per_warning2(t_)
         print(f'<tr>'
               f'<td></td>'
               f'<td>Spindle RPM'
               f'<td>{spindle_rpm.m_as("rpm"):.0f} rpm</td>'
-              f'<td colspan="2"></td>'
+              f'<td></td>'
+              f'<td class="small_td">{t_:.1f}%<br>Max Spindle RPM</td>'
               f'<td>Requested {requested_spindle_rpm.m_as("rpm"):,.0f} rpm limited by spindle</td>'
               f'</tr>')
     else:
@@ -176,13 +179,16 @@ def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
               f'<td>Surface speed</td>'
               f'<td>{sfm.m_as("ft * rpm"):.2f} ft&middot;rpm</td>'
               f'<td>{sfm.m_as("m * rpm"):.2f} m&middot;rpm</td>'
-              f'<td>{t_:.1f}%</td>'
+              f'<td class="small_td">{t_:.1f}%<br>Max Material Speed</td>'
               f'</tr>')
+
+    t_ = ((feed_per_revolution.to("inch / turn") * spindle_rpm) / m.max_z_rate).m_as('') * 100
     print(f'<tr>'
           f'<td></td>'
           f'<td>Feed per revolution</td>'
           f'<td>{feed_per_revolution.m_as("inch / turn"):.4f} in/turn</td>'
           f'<td>{feed_per_revolution.m_as("mm / turn"):.2f} mm/turn</td>'
+          f'<td class="small_td">{t_:.1f}%<br>Max Z Feedrate</td>'
           f'</tr>')
     print('<tr>'
           f'<td>Calculated by F360</td>'
@@ -195,7 +201,7 @@ def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
               f'<td>Surface speed</td>'
               f'<td>{sfm.m_as("ft * rpm"):.2f} ft&middot;rpm</td>'
               f'<td>{sfm.m_as("m * rpm"):.2f} m&middot;rpm</td>'
-              f'<td>{t_:.1f}%</td>'
+              f'<td class="small_td">{t_:.1f}%<br>Max Material Speed</td>'
               f'<td>limited by maximum spindle speed</td>'
               f'</tr>')
     else:
@@ -205,7 +211,8 @@ def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
               f'<td></td>'
               f'<td>Spindle RPM{ts_}</td>'
               f'<td>{spindle_rpm.m_as("rpm"):.0f} rpm</td>'
-              f'<td colspan="2"></td>'
+              f'<td></td>'
+              f'<td class="small_td">{t_:.1f}%<br>Max Spindle RPM</td>'
               f'<td>calculated by f360 using tool diam and sfm</td>'
               f'</tr>')
     t_ = (plunge_feedrate / max_plunge_feedrate).m_as('') * 100
@@ -214,7 +221,7 @@ def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
           f'<td></td><td>Plunge feedrate{ts_}</td>'
           f'<td>{plunge_feedrate.m_as("inch / minute"):.2f} in/min</td>'
           f'<td>{plunge_feedrate.m_as("mm / minute"):.2f} mm/min</td>'
-          f'<td>{t_:.1f}%</td>'
+          f'<td class="small_td">{t_:.1f}%<br>Max Z Feedrate</td>'
           f'<td>calculated by f360 using feed/rev and spindle rpm</td>'
           f'</tr>')
     print('</tbody>')
