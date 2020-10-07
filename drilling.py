@@ -437,8 +437,8 @@ def print_alternatives(m, mat, diam, tool, op):
           f'<th>% of Avail.<br>Power</th>'
           f'<th>Vc (ft/min)<br>% of {Vc_r.m_as("ft * tpm"):.0f}</th>'
           f'<th>fr (in/rev)<br>% of {fr_r.m_as("in / turn"):.4f}</th>'
-          f'<th>Zf (in/min)<br>% of {m.max_z_rate.m_as("in / min"):.0f}</th>'
           f'<th>N (rpm)<br>% of {m.max_rpm.m_as("rpm"):.0f}</th>'
+          f'<th>Zf (in/min)<br>% of {m.max_z_rate.m_as("in / min"):.0f}</th>'
           f'<th>Ff (lbs)<br>% of {m.max_feed_force.m_as("lbs"):.0f}</th>'
           f'</tr>'
           f'<tbody')
@@ -457,8 +457,8 @@ def print_alternatives(m, mat, diam, tool, op):
                   f'<td>{(P_req / P_avail_cont).m_as("") * 100:.0f}% ({P_req.m_as("watt"):.1f} W)</td>'
                   f'<td>{Vc.m_as("ft * tpm"):.1f} ({(Vc / Vc_r).m_as("") * 100:.0f}%)</td>'
                   f'<td>{fr.m_as("in / turn"):.4f} ({(fr / fr_r).m_as("") * 100:.0f}%)</td>'
-                  f'<td>{(fr * N).m_as("in / min"):.2f} ({((fr * N) / m.max_z_rate).m_as("") * 100:.0f}%)</td>'
                   f'<td>{N.m_as("rpm"):.0f} ({(N / m.max_rpm).m_as("") * 100:.0f}%)</td>'
+                  f'<td>{(fr * N).m_as("in / min"):.2f} ({((fr * N) / m.max_z_rate).m_as("") * 100:.0f}%)</td>'
                   f'<td>{thrust2.m_as("lbs"):.1f} ({(thrust2 / m.max_feed_force).m_as("") * 100:.0f}%)</td>'
                   f'</tr>')
             # print(f'<tr>'
