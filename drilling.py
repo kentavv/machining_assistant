@@ -5,6 +5,8 @@ import urllib
 
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
+import io
 
 import pymachining as pm
 from helper import *
@@ -401,10 +403,10 @@ def print_specifications(stock_material, material_sfm, m, P, max_P, max_thrust, 
         print(f'<img src="/machining_assistant/assistant.fcgi?operation=drilling&amp;graph=graph6&amp;args={args}">')
 
 
-def print_alternatives(m, mat, diam, tool, op):
+def calc_alternatives(m, mat, diam, tool, op):
     Vc_r = mat.sfm(tool.tool_material)
     fr_r = tool.feed_rate(mat)
-
+    
     options = []
     thrust = tool.thrust(mat)
     for Vc in np.linspace(Vc_r * .01, Vc_r * 1.5, 20):
@@ -428,7 +430,24 @@ def print_alternatives(m, mat, diam, tool, op):
     #               thrust, thrust2, m.max_feed_force, '\n',
     #              mrr.to('in ** 3 / min'))
 
-                  
+    options = sorted(options, key=lambda x: x[2], reverse=True)
+
+    options2 = []
+    for Vc, fr, mrr in options[:100]:
+#         mrr = op.metal_removal_rate2(fr, Vc)
+        N = (Vc / (np.pi * diam)).to('rpm')
+        P_avail_cont = m.power_continuous(N)
+        P_avail_int = m.power_intermittent(N)
+        P_req = op.net_power(fr, N).to('watt')
+        thrust2 = tool.thrust2(mat, fr)
+        options2 += [(Vc, fr, mrr, N, P_avail_cont, P_avail_int, P_req, thrust2)]
+
+    return Vc_r, fr_r, options2
+
+
+def print_alternatives(m, mat, diam, tool, op):
+    Vc_r, fr_r, options2 = calc_alternatives(m, mat, diam, tool, op)
+              
     print('<h2>Alternative machining parameters</h2>')
     print(f'<table class="styled-table" id="alt_table">'
           f'<thead>'
@@ -442,15 +461,10 @@ def print_alternatives(m, mat, diam, tool, op):
           f'<th>Ff (lbs)<br>% of {m.max_feed_force.m_as("lbs"):.0f}</th>'
           f'</tr>'
           f'<tbody')
-    options = sorted(options, key=lambda x: x[2], reverse=True)
+
     thrust = tool.thrust(mat)
-    for Vc, fr, _ in options[:100]:
-            N = (Vc / (np.pi * diam)).to('rpm')
-            P_avail_cont = m.power_continuous(N)
-            P_avail_int = m.power_intermittent(N)
-            P_req = op.net_power(fr, N).to('watt')
-            thrust2 = tool.thrust2(mat, fr)
-            mrr = op.metal_removal_rate2(fr, Vc)
+    for xx in options2[:100]:
+            Vc, fr, mrr, N, P_avail_cont, P_avail_int, P_req, thrust2 = xx
 
             print(f'<tr>'
                   f'<td>{mrr.m_as("in ** 3 / min"):.2f}</td>'
@@ -486,6 +500,11 @@ def print_alternatives(m, mat, diam, tool, op):
     #               f'Ff={thrust2.m_as("lbs"):.1f} lbs < {m.max_feed_force.m_as("lbs"):.1f} lbs ({(thrust2 / m.max_feed_force).m_as("") * 100:.1f} %)')
 
     print('</tbody></table>')
+
+    ss = f'{m.name}\t{mat.name}\t{diam.m_as("in"):.4f} in'
+    ss = urllib.parse.quote_plus(ss)
+    print(f'<img src="/machining_assistant/assistant.fcgi?operation=drilling&amp;graph=graph7&amp;args={ss}">')
+
 
 def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
     stock_material = pm.Material(material_name)
@@ -646,6 +665,58 @@ def drill_graph6(args):
     return img_str
 
 
+def drill_graph7(args):
+    ss = args.split('\t')
+    machine, material_name, drill_diam = ss
+
+    stock_material = pm.Material(material_name)
+    u, v = drill_diam.split(maxsplit=1)
+    drill_diam = Q_(float(u), v)
+    tool = pm.DrillHSSStub(drill_diam)
+    op = pm.DrillOp(tool, stock_material)
+
+    if machine == 'PM25MV':
+        m = pm.MachinePM25MV()
+    elif machine == 'PM25MV_DMMServo':
+        m = pm.MachinePM25MV_DMMServo()
+    elif machine == 'PM25MV_HS':
+        m = pm.MachinePM25MV_HS()
+    else:
+        m = None
+
+    Vc_r, fr_r, options2 = calc_alternatives(m, stock_material, drill_diam, tool, op)
+
+    # Vc, fr, mrr, N, P_avail_cont, P_avail_int, P_req, thrust2 = xx
+
+    options_ = options2[:100]
+    x = np.array([x[0].m_as("ft * tpm") for x in options_])
+    y = np.array([x[1].m_as("in / turn") for x in options_])
+    # z = np.array([x[2].m_as("in ** 3 / min") for x in options_]) * 10
+    z0 = np.array([x[4].m_as("watt") for x in options_])
+    z = np.array([x[6].m_as("watt") for x in options_]) / z0 * 100
+
+    # fig, ax = plt.subplots(figsize=(12,8), dpi= 100)
+    fig, ax = plt.subplots(dpi=100)
+    plt.scatter(x, y, s=1, c='red') #, s=z)
+    plt.xlabel('SFM [ft * min]')
+    plt.ylabel('IPR [in / turn]')
+    plt.title('Power-RPM Requirement for Speed-Feed')
+    for i, txt in enumerate(options_):
+        Vc, fr, mrr, N, P_avail_cont, P_avail_int, P_req, thrust2 = options_[i]
+        txt = f'{(P_req / P_avail_cont).m_as("") * 100:.0f}%\n{N.m_as("rpm"):.0f}'
+        ax.annotate(txt, (x[i], y[i]), size=6)
+    plt.show()
+    imgdata = io.BytesIO()
+    plt.savefig(imgdata, format='png', bbox_inches='tight')
+    imgdata.seek(0)
+    img_str = imgdata.getvalue()
+    plt.close()
+    # s = embed_png(img_str)
+    # print(len(s))
+    # print(embed_png(img_str))
+    return img_str
+
+
 def print_amazon_links():
     # random.shuffle(amazon_links_drills)
     print(f'<br><br><br>'
@@ -672,6 +743,8 @@ def drill_assistant_graphs(env, form):
         return drill_graph5(d0['args'])
     elif d0['graph'] == 'graph6':
         return drill_graph6(d0['args'])
+    elif d0['graph'] == 'graph7':
+        return drill_graph7(d0['args'])
     return None
 
 
