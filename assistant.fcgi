@@ -1,4 +1,4 @@
-#!/home/dh_6i8v7b/.local/share/virtualenvs/pymachining-iAFu6bf3/bin/python
+#!/home/dh_6i8v7b/.local/share/virtualenvs/machining_assistant-5Q48g--X/bin/python
 
 # import cgitb
 # cgitb.enable()
@@ -13,6 +13,9 @@ import urllib.parse
 from flup.server.fcgi import WSGIServer
 
 sys.path.append('../pymachining/')
+
+#import matplotlib.pyplot as plt
+#import seaborn as sns
 
 import pymachining as pm
 from drilling import drill_assistant_main, drill_assistant_header, drill_assistant_graphs

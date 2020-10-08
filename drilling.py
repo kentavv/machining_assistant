@@ -1,4 +1,4 @@
-#!/home/dh_6i8v7b/.local/share/virtualenvs/pymachining-iAFu6bf3/bin/python
+#!/home/dh_6i8v7b/.local/share/virtualenvs/machining_assistant-5Q48g--X/bin/python
 
 import random
 import urllib
@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import io
+#import seaborn as sns
 
 import pymachining as pm
 from helper import *
@@ -109,20 +110,25 @@ def per_warning(v):
 
 
 def print_introduction(drill_diam, depth, material_name):
-    print('<h1>Drilling operation</h1>')
+    print('<h1 id="section_op">Drilling operation</h1>')
     print(f'<p>Summary (imperial): Drill a {drill_diam.m_as("in"):.3f}in hole {depth.m_as("in"):.3f}in deep into {material_name}.<br>')
     print(f'Summary (metric): Drill a {drill_diam.m_as("mm"):.2f}mm hole {depth.m_as("mm"):.2f}mm deep into {material_name}.<br>')
     print(f'All estimates are based on <a href="https://www.notion.so/Drilling-724f1a6e27984f42be27ac6a63127e71">theory</a> and should not be taken as recommendations.</p>')
 
 
-def print_machining_parameters(m, spindle_limited, spindle_rpm, max_spindle_rpm, requested_spindle_rpm, feed_per_revolution, sfm, material_sfm, plunge_feedrate, max_plunge_feedrate, drill_diam):
-    print('<h2>Machining parameters</h2>')
+def print_machining_parameters(m, spindle_limited, spindle_rpm, max_spindle_rpm, requested_spindle_rpm, feed_per_revolution, sfm, material_sfm, plunge_feedrate, max_plunge_feedrate, drill_diam, limits):
+    print('<h2 id="section_parameters">Machining parameters</h2>')
     print('''<p>Surface speed and feed per 
           revolution are preferred since these are most accessible from materials and tooling 
           charts. Fusion 360 uses these to calculate spindle RPM and plunge rate.
           In situations where requested RPM is not obtainable by the spindle, 
           spindle RPM should be supplied, and Fusion 360 will calculate surface 
           feed.</p>''')
+    if limits:
+      print(f'<p>Operation on the machine may be limited by {limits}.'
+            f' See <a href="#section_demands">Demands</a> to learn the severity and consider <a href="#section_alternatives">Alternatives</a>.')
+    else:
+      print(f'<p>Additional productivity may be possible. See <a href="#section_alternatives">Alternatives</a>.')
     print('<table class="styled-table">')
     print('<tbody>')
     print('<tr><td>Supplied to F360</td><td colspan="5"></td></tr>')
@@ -203,8 +209,8 @@ def print_machining_parameters(m, spindle_limited, spindle_rpm, max_spindle_rpm,
         print('</p>')
 
 
-def print_operation_analysis(depth, drill_diam, sfm, material_sfm, spindle_limited, torque_limited, thrust_limited, plunge_limited, spindle_rpm, requested_spindle_rpm):
-    print('<h2>Operation analysis</h2>')
+def print_operation_analysis(depth, drill_diam, sfm, material_sfm, limits, spindle_rpm, requested_spindle_rpm):
+    print('<h2 id="section_analysis">Operation analysis</h2>')
     print(f'<table class="styled-table">'
           f'<tbody>')
     t_ = (depth / drill_diam).m_as('')
@@ -229,16 +235,16 @@ def print_operation_analysis(depth, drill_diam, sfm, material_sfm, spindle_limit
     if sfm > material_sfm:
         print(f'<tr><td></td><td>Warning: SFM ({sfm:.1f}) exceeds material SFM ({material_sfm:.1f})</td></tr>')
     t_ = False
-    if spindle_limited:
+    if 'spindle' in limits:
         print(f'<tr><td></td><td>Limited by spindle RPM: requested spindle rpm {requested_spindle_rpm.m_as("rpm"):.2f} rpm changed to {spindle_rpm.m_as("rpm"):.2f} rpm</td></tr>')
         t_ = True
-    if torque_limited:
+    if 'torque' in limits:
         print('<tr><td></td><td>Limited by spindle torque</td></tr>')
         t_ = True
-    if thrust_limited:
+    if 'thrust' in limits:
         print('<tr><td></td><td>Limited by thrust</td></tr>')
         t_ = True
-    if plunge_limited:
+    if 'plunge' in limits:
         print('<tr><td></td><td>Limited by plunge feedrate</td></tr>')
         t_ = True
     if not t_:
@@ -247,8 +253,9 @@ def print_operation_analysis(depth, drill_diam, sfm, material_sfm, spindle_limit
           f'</table>')
 
 
-def print_machine_demands(thrust1, max_thrust, thrust2, spindle_limited, spindle_rpm, max_spindle_rpm, P, max_P, T, max_T, Q, op_time):
-    print('<h2>Machine demands</h2>')
+def print_machine_demands(thrust1, max_thrust, thrust2, limits, spindle_rpm, max_spindle_rpm, P, max_P, T, max_T, Q, op_time):
+    limits = []
+    print('<h2 id="section_demands">Machine demands</h2>')
     print(f'<table class="styled-table">'
           f'<tbody>')
     t_ = (thrust1 / max_thrust).m_as('') * 100
@@ -267,7 +274,7 @@ def print_machine_demands(thrust1, max_thrust, thrust2, spindle_limited, spindle
           f'<td>{thrust2.m_as("pound"):.2f} lbs</td>'
           f'<td>{thrust2.m_as("kg"):.2f} kg</td>'
           f'</tr>')
-    if spindle_limited:
+    if 'spindle' in limits:
         print(f'<tr>'
               f'<td>Spindle RPM (limited)</td>'
               f'<td>{spindle_rpm.m_as("rpm"):.2f} rpm</td>'
@@ -319,7 +326,7 @@ def print_machine_demands(thrust1, max_thrust, thrust2, spindle_limited, spindle
 
 
 def print_specifications(stock_material, material_sfm, m, P, max_P, max_thrust, spindle_rpm, material_name, drill_diam):
-    print('<h2>Specifications</h2>')
+    print('<h2 id="section_specifications">Specifications</h2>')
     print('<table class="styled-table">')
     print('<tbody>')
     print(f'<tr>'
@@ -394,7 +401,7 @@ def print_specifications(stock_material, material_sfm, m, P, max_P, max_thrust, 
     # print(op)
 
     if True:
-        print('<h2>Capacity</h2>')
+        print('<h2 id="section_capacity">Capacity</h2>')
         args = f'{m.name}\t{P}\t{spindle_rpm}'
         args = urllib.parse.quote_plus(args)
         print(f'<img src="/machining_assistant/assistant.fcgi?operation=drilling&amp;graph=graph5&amp;args={args}"><br>')
@@ -445,10 +452,18 @@ def calc_alternatives(m, mat, diam, tool, op):
     return Vc_r, fr_r, options2
 
 
-def print_alternatives(m, mat, diam, tool, op):
+def print_alternatives(m, mat, diam, tool, op, limits):
     Vc_r, fr_r, options2 = calc_alternatives(m, mat, diam, tool, op)
               
-    print('<h2>Alternative machining parameters</h2>')
+    print('<h2 id="section_alternatives">Alternative machining parameters</h2>')
+    if limits:
+        print(f'<p>Here are alternatives to consider, organized by MRR.'
+              f' The "standard parameters" are limited by the machine\'s {limits}.'
+              f' Selection from the list of alternatives may be required for success.</p>')
+    else:
+        print(f'<p>Here are alternatives to consider, organized by MRR.'
+              f' The "standard parameters" are not limited by the machine\'s capacity.'
+              f' Greater productivity may be possible, at possible expense of tool life.</p>')
     print(f'<table class="styled-table" id="alt_table">'
           f'<thead>'
           f'<tr>'
@@ -514,6 +529,8 @@ def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
     sfm = stock_material.sfm(tool.tool_material)
     material_sfm = sfm
 
+    limits = []
+
     feed_per_revolution = tool.feed_rate(stock_material)
     max_spindle_rpm = m.max_rpm
     requested_spindle_rpm = op.rrpm(sfm)
@@ -522,11 +539,11 @@ def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
     if spindle_rpm < requested_spindle_rpm:
         # SFM is now limited by the spindle RPM
         sfm = (drill_diam * np.pi * spindle_rpm).to('foot * tpm')
-        spindle_limited = True
+        limits += ['spindle']
     if spindle_rpm < m.min_rpm:
         spindle_rpm = m.min_rpm
         sfm = (drill_diam * np.pi * spindle_rpm).to('foot * tpm')
-        spindle_limited = True
+        limits += ['spindle']
         # May now exceed the material SFM
 
     P = op.net_power(feed_per_revolution, spindle_rpm).to('watt')
@@ -534,31 +551,28 @@ def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
     Q = op.metal_removal_rate(feed_per_revolution, spindle_rpm)
     T = op.torque(P.to('watt'), spindle_rpm)
     max_T = m.torque_intermittent(spindle_rpm)
-    torque_limited = False
     if T > max_T:
-        torque_limited = True
+        limits += ['torque']
     thrust1 = tool.thrust(stock_material).to('lbs')
     thrust2 = tool.thrust2(stock_material, feed_per_revolution).to('lbs')
     max_thrust = m.max_feed_force.to('lbs')
-    thrust_limited = False
     if thrust1 > max_thrust:
-        thrust_limited = True
+        limits += ['thrust']
     op_time = op.machining_time(depth, feed_per_revolution * spindle_rpm).to('min')
     plunge_feedrate = (feed_per_revolution * spindle_rpm).to('inch / minute')
     max_plunge_feedrate = m.max_z_rate
-    plunge_limited = False
     if plunge_feedrate > max_plunge_feedrate:
-        plunge_limited = True
+        limits += ['plunge']
 
     print_introduction(drill_diam, depth, material_name)
 
-    print_machining_parameters(m, spindle_limited, spindle_rpm, max_spindle_rpm, requested_spindle_rpm, feed_per_revolution, sfm, material_sfm, plunge_feedrate, max_plunge_feedrate, drill_diam)
+    print_machining_parameters(m, spindle_limited, spindle_rpm, max_spindle_rpm, requested_spindle_rpm, feed_per_revolution, sfm, material_sfm, plunge_feedrate, max_plunge_feedrate, drill_diam, limits)
 
-    print_alternatives(m, stock_material, drill_diam, tool, op)
+    print_operation_analysis(depth, drill_diam, sfm, material_sfm, limits, spindle_rpm, requested_spindle_rpm)
 
-    print_operation_analysis(depth, drill_diam, sfm, material_sfm, spindle_limited, torque_limited, thrust_limited, plunge_limited, spindle_rpm, requested_spindle_rpm)
+    print_machine_demands(thrust1, max_thrust, thrust2, limits, spindle_rpm, max_spindle_rpm, P, max_P, T, max_T, Q, op_time)
 
-    print_machine_demands(thrust1, max_thrust, thrust2, spindle_limited, spindle_rpm, max_spindle_rpm, P, max_P, T, max_T, Q, op_time)
+    print_alternatives(m, stock_material, drill_diam, tool, op, limits)
 
     print_specifications(stock_material, material_sfm, m, P, max_P, max_thrust, spindle_rpm, material_name, drill_diam)
 
@@ -720,7 +734,7 @@ def drill_graph7(args):
 def print_amazon_links():
     # random.shuffle(amazon_links_drills)
     print(f'<br><br><br>'
-          f'<h3>Favorite related tools</h3>'
+          f'<h2 id="section_ads">Favorite related tools</h2>'
           f'<p>{amazon_disclosure}<br>'
           f'{amazon_links_drills[2]}<br>'
           f'{amazon_links_drills[1]}</p>')

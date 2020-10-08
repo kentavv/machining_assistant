@@ -9,6 +9,7 @@ matplotlib = "*"
 opencv-python = "*"
 numpy = "*"
 pint = "*"
+seaborn = "*"
 
 [dev-packages]
 
