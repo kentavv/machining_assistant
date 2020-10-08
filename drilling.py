@@ -126,7 +126,7 @@ def print_machining_parameters(m, spindle_limited, spindle_rpm, max_spindle_rpm,
           feed.</p>''')
     if limits:
       print(f'<p>Operation on the machine may be limited by {limits}.'
-            f' See <a href="#section_demands">Demands</a> to learn the severity and consider <a href="#section_alternatives">Alternatives</a>.')
+            f' See <a href="#section_demands">Demands</a> to estimate the severity and consider <a href="#section_alternatives">Alternatives</a>.')
     else:
       print(f'<p>Additional productivity may be possible. See <a href="#section_alternatives">Alternatives</a>.')
     print('<table class="styled-table">')
