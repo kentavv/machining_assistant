@@ -14,9 +14,6 @@ from flup.server.fcgi import WSGIServer
 
 sys.path.append('../pymachining/')
 
-#import matplotlib.pyplot as plt
-#import seaborn as sns
-
 import pymachining as pm
 from drilling import drill_assistant_main, drill_assistant_header, drill_assistant_graphs
 from amazon_links import *
@@ -185,7 +182,9 @@ def application(environ, start_response):
         yield application_main(environ, start_response)
     except Exception:
         import traceback
-        fn = f'exception_{os.getpid()}.txt'
+        dn = 'exceptions'
+        os.makedirs(dn, exist_ok=True)
+        fn = f'{dn}/{os.getpid():05d}.txt'
         with open(fn, 'w') as f:
             # print(f'env: {env}', file=f)
             # print(f'\n\nform: {form}', file=f)
