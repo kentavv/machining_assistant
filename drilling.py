@@ -1,4 +1,4 @@
-#!/home/dh_6i8v7b/.local/share/virtualenvs/machining_assistant-5Q48g--X/bin/python
+#!/home/dh_6i8v7b/.local/share/virtualenvs/pymachining-iAFu6bf3/bin/python
 
 import random
 import urllib
@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import io
-#import seaborn as sns
+import seaborn as sns
 
 import pymachining as pm
 from helper import *
@@ -21,8 +21,8 @@ def drill_assistant_header(env, d):
           f'<table class="styled-table">'
           f'<tr>'
           f'<td><label for="machine">Machine:</label></td>'
-          f'<td><select ' + ('style="color:#ff0000" ' if env['machine'] != d['machine'] else '') + 'id="machine" name="machine" value="PM25MV_HS">')
-    v = [('PM25MV', 'PM25MV'), ('PM25MV_DMMServo', 'PM25MV DMMServo'), ('PM25MV_HS', 'PM25MV HS')]
+          f'<td><select ' + ('style="color:#ff0000" ' if env['machine'] != d['machine'] else '') + 'id="machine" name="machine" value="PM25MV_2.2kW24kRPM">')
+    v = [('PM25MV', 'PM25MV'), ('PM25MV_DMMServo', 'PM25MV DMMServo'), ('PM25MV_2.2kW24kRPM', 'PM25MV 2.2kW24kRPM')]
     for a, b in v:
         s = ' selected' if (a == env['machine'] or a == 'PM25MV_DMMServo' and env['machine'] is None) else ''
         print('    <option value="' + a + '"' + s + '>' + b + '</option>')
@@ -456,6 +456,9 @@ def print_alternatives(m, mat, diam, tool, op, limits):
     Vc_r, fr_r, options2 = calc_alternatives(m, mat, diam, tool, op)
               
     print('<h2 id="section_alternatives">Alternative machining parameters</h2>')
+    if not options2:
+        print(f'<p>No alternatives to consider within the limits of the machine or recommendations of material or tool.</p>')
+        return
     if limits:
         print(f'<p>Here are alternatives to consider, organized by MRR.'
               f' The "standard parameters" are limited by the machine\'s {limits}.'
@@ -656,7 +659,7 @@ def drill_graph5(args):
         m = pm.MachinePM25MV()
     elif machine == 'PM25MV_DMMServo':
         m = pm.MachinePM25MV_DMMServo()
-    elif machine == 'PM25MV_HS':
+    elif machine == 'PM25MV_2.2kW24kRPM':
         m = pm.MachinePM25MV_HS()
     else:
         m = None
@@ -693,7 +696,7 @@ def drill_graph7(args):
         m = pm.MachinePM25MV()
     elif machine == 'PM25MV_DMMServo':
         m = pm.MachinePM25MV_DMMServo()
-    elif machine == 'PM25MV_HS':
+    elif machine == 'PM25MV_2.2kW24kRPM':
         m = pm.MachinePM25MV_HS()
     else:
         m = None
@@ -775,7 +778,7 @@ def drill_assistant_main(env, form):
 
     d = dict(d0)
 
-    if d['machine'] not in ['PM25MV', 'PM25MV_DMMServo', 'PM25MV_HS']:
+    if d['machine'] not in ['PM25MV', 'PM25MV_DMMServo', 'PM25MV_2.2kW24kRPM']:
         d['machine'] = None
 
     if d['stock_mat'] not in ['aluminum', '6061', 'steel', 'steel-mild', '12l14', 'steel-medium', 'steel-high']:
@@ -811,7 +814,7 @@ def drill_assistant_main(env, form):
             m = pm.MachinePM25MV()
         elif d['machine'] == 'PM25MV_DMMServo':
             m = pm.MachinePM25MV_DMMServo()
-        elif d['machine'] == 'PM25MV_HS':
+        elif d['machine'] == 'PM25MV_2.2kW24kRPM':
             m = pm.MachinePM25MV_HS()
         else:
             m = None
