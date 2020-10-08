@@ -103,7 +103,7 @@ def print_head():
 
 def print_header():
     print('<h1>Machining Assistant</h1>')
-    print('<p>Return to <a href="https://kvvcreates.com/machining_assistant/assistant.fcgi">Machining Assistant</a> or <a href="https://kvvcreates.com">KvvCreates</a></p>')
+    print('<p>Return to <a href="assistant.fcgi">Machining Assistant</a> or <a href="https://kvvcreates.com">KvvCreates</a></p>')
 
 
 def print_footer():

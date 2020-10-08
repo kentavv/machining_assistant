@@ -17,7 +17,7 @@ Q_ = pm.getQ()
 
 
 def drill_assistant_header(env, d):
-    print(f'<form action="/machining_assistant/assistant.fcgi?operation=drilling" method="post">'
+    print(f'<form action="assistant.fcgi?operation=drilling" method="post">'
           f'<table class="styled-table">'
           f'<tr>'
           f'<td><label for="machine">Machine:</label></td>'
@@ -345,10 +345,10 @@ def print_machining_parameters(m, spindle_limited, spindle_rpm, max_spindle_rpm,
               f'<p>')
         ss = f'{spindle_limited}\t{drill_diam.m_as("in"):.4f}in drill\t{spindle_rpm.m_as("rpm"):.0f} rpm\t{sfm.m_as("ft * rpm"):.2f} ft/min\t{plunge_feedrate.m_as("inch / minute"):.2f} in/min\t{feed_per_revolution.m_as("inch / turn"):.4f} in'
         ss = urllib.parse.quote_plus(ss)
-        print(f'<img src="/machining_assistant/assistant.fcgi?operation=drilling&amp;graph=graph1&amp;args={ss}">')
-        # print('<img src="/machining_assistant/assistant.fcgi?operation=drilling&amp;graph=graph2">')
-        # print('<img src="/machining_assistant/assistant.fcgi?operation=drilling&amp;graph=graph3">')
-        print('<img src="/machining_assistant/assistant.fcgi?operation=drilling&amp;graph=graph4">')
+        print(f'<img src="assistant.fcgi?operation=drilling&amp;graph=graph1&amp;args={ss}">')
+        # print('<img src="assistant.fcgi?operation=drilling&amp;graph=graph2">')
+        # print('<img src="assistant.fcgi?operation=drilling&amp;graph=graph3">')
+        print('<img src="assistant.fcgi?operation=drilling&amp;graph=graph4">')
         print('</p>')
 
 
@@ -547,10 +547,10 @@ def print_specifications(stock_material, material_sfm, m, P, max_P, max_thrust, 
         print('<h2 id="section_capacity">Capacity</h2>')
         args = f'{m.name}\t{P}\t{spindle_rpm}'
         args = urllib.parse.quote_plus(args)
-        print(f'<img src="/machining_assistant/assistant.fcgi?operation=drilling&amp;graph=graph5&amp;args={args}"><br>')
+        print(f'<img src="assistant.fcgi?operation=drilling&amp;graph=graph5&amp;args={args}"><br>')
         args = f'{material_name}\t{m.max_feed_force}\t{drill_diam}'
         args = urllib.parse.quote_plus(args)
-        print(f'<img src="/machining_assistant/assistant.fcgi?operation=drilling&amp;graph=graph6&amp;args={args}">')
+        print(f'<img src="assistant.fcgi?operation=drilling&amp;graph=graph6&amp;args={args}">')
 
 
 def calc_alternatives(m, mat, diam, tool, op):
@@ -664,7 +664,7 @@ def print_alternatives(m, mat, diam, tool, op, limits):
 
     ss = f'{m.name}\t{mat.name}\t{diam.m_as("in"):.4f} in'
     ss = urllib.parse.quote_plus(ss)
-    print(f'<img src="/machining_assistant/assistant.fcgi?operation=drilling&amp;graph=graph7&amp;args={ss}">')
+    print(f'<img src="assistant.fcgi?operation=drilling&amp;graph=graph7&amp;args={ss}">')
 
 
 def drill_assistant(m, material_name, drill_diam, depth, drill_angle, generate_graphs=False):
