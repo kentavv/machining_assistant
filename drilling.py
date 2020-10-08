@@ -17,6 +17,7 @@ Q_ = pm.getQ()
 
 
 def drill_assistant_header(env, d):
+    print(env['drill_angle'], d['drill_angle'])
     print(f'<form action="/machining_assistant/assistant.fcgi?operation=drilling" method="post">'
           f'<table class="styled-table">'
           f'<tr>'
@@ -51,6 +52,16 @@ def drill_assistant_header(env, d):
     v = [('hss', 'HSS'), ('carbide', 'Carbide')]
     for a, b in v:
         s = ' selected' if a == env['tool_mat'] else ''
+        print('<option value="' + a + '"' + s + '>' + b + '</option>')
+    print(f'</select></td>'
+          f'</tr>'
+          f''
+          f'<tr>'
+          f'<td><label for="angle">Drill angle:</label></td>'
+          f'<td><select ' + ('style="color:#ff0000" ' if ((env['drill_angle'] is not None and d['drill_angle'] is not None) and float(env['drill_angle']) != float(d['drill_angle'])) else '') + 'id="drill_angle" name="drill_angle">')
+    v = [('118', '118'), ('135', '135')]
+    for a, b in v:
+        s = ' selected' if a == str(env['drill_angle']) else ''
         print('<option value="' + a + '"' + s + '>' + b + '</option>')
     print(f'</select></td>'
           f'</tr>')
@@ -109,14 +120,21 @@ def per_warning(v):
     return ' (!!!)' if v >= 100 else ' (!!)' if v >= 90 else ' (!)' if v >= 80 else ''
 
 
-def print_introduction(drill_diam, depth, material_name):
+def calc_approach_distance(drill_diam, drill_angle):
+    return (drill_diam / 2) / np.tan((drill_angle / 180 * np.pi) / 2)
+
+
+def print_introduction(drill_diam, depth, material_name, drill_angle):
     print('<h1 id="section_op">Drilling operation</h1>')
+    approach_distance = calc_approach_distance(drill_diam, drill_angle)
     print(f'<p>Summary (imperial): Drill a {drill_diam.m_as("in"):.3f}in hole {depth.m_as("in"):.3f}in deep into {material_name}.<br>')
+    print(f'Approach distance: {approach_distance.m_as("in"):.3f} in.<br>')
     print(f'Summary (metric): Drill a {drill_diam.m_as("mm"):.2f}mm hole {depth.m_as("mm"):.2f}mm deep into {material_name}.<br>')
+    print(f'Approach distance: {approach_distance.m_as("mm"):.2f} mm.<br>')
     print(f'All estimates are based on <a href="https://www.notion.so/Drilling-724f1a6e27984f42be27ac6a63127e71">theory</a> and should not be taken as recommendations.</p>')
 
 
-def print_machining_parameters(m, spindle_limited, spindle_rpm, max_spindle_rpm, requested_spindle_rpm, feed_per_revolution, sfm, material_sfm, plunge_feedrate, max_plunge_feedrate, drill_diam, limits):
+def print_machining_parameters(m, spindle_limited, spindle_rpm, max_spindle_rpm, requested_spindle_rpm, feed_per_revolution, sfm, material_sfm, plunge_feedrate, max_plunge_feedrate, drill_diam, limits, drill_angle, depth):
     print('<h2 id="section_parameters">Machining parameters</h2>')
     print('''<p>Surface speed and feed per 
           revolution are preferred since these are most accessible from materials and tooling 
@@ -198,8 +216,85 @@ def print_machining_parameters(m, spindle_limited, spindle_rpm, max_spindle_rpm,
     print('</tbody>')
     print('</table>')
 
+    approach_distance = calc_approach_distance(drill_diam, drill_angle)
+    # depth = drill_depth
+    print(f'<h3>G-code programming</h3>'
+          f'<p>All code assumes that drill bit point at z=0 is top of hole.</p>'
+          f'<p>'
+          f'Imperial expression<br>'
+          f'<pre>'
+          f'm3 s{spindle_rpm.m_as("rpm"):.0f}\n'
+          f'g0 z.1\n'
+          f'g1 f{plunge_feedrate.m_as("in / min"):.1f} z-[{depth.m_as("in"):.4f}+{approach_distance.m_as("in"):.4f}]\n'
+          f'g0 z.1'
+          f'</pre>'
+          f'</p>'
+          f'<p>'
+          f'Imperial explicit<br>'
+          f'<pre>'
+          f'm3 s{spindle_rpm.m_as("rpm"):.0f}\n'
+          f'g0 z.1\n'
+          f'g1 f{plunge_feedrate.m_as("in / min"):.1f} z-{(depth + approach_distance).m_as("in"):.4f}\n'
+          f'g0 z.1'
+          f'</pre>'
+          f'</p>'
+          f'<p>'
+          f'Metric expression<br>'
+          f'<pre>'
+          f'm3 s{spindle_rpm.m_as("rpm"):.0f}\n'
+          f'g0 z2.54\n'
+          f'g1 f{plunge_feedrate.m_as("mm / min"):.0f} z-[{depth.m_as("mm"):.3f}+{approach_distance.m_as("mm"):.3f}]\n'
+          f'g0 z2.54'
+          f'</pre>'
+          f'</p>'
+          f'<p>'
+          f'Metric explicit<br>'
+          f'<pre>'
+          f'm3 s{spindle_rpm.m_as("rpm"):.0f}\n'
+          f'g0 z2.54\n'
+          f'g1 f{plunge_feedrate.m_as("mm / min"):.0f} z-{(depth + approach_distance).m_as("mm"):.3f}\n'
+          f'g0 z2.54'
+          f'</pre>'
+          f'</p>'
+         )
+    print(f'<h3>G-code programming</h3>'
+          f'<p>All code assumes that drill bit point at z=0 is top of hole.</p>'
+          f'<table class="styled-table">'
+          f'<tbody>'
+          f'<tr><td>Imperial expression</td><td>'
+          f'<td><pre>'
+          f'm3 s{spindle_rpm.m_as("rpm"):.0f}\n'
+          f'g0 z.1\n'
+          f'g1 f{plunge_feedrate.m_as("in / min"):.1f} z-[{depth.m_as("in"):.4f}+{approach_distance.m_as("in"):.4f}]\n'
+          f'g0 z.1'
+          f'</pre></td></tr>'
+          f'<tr><td>Imperial explicit</td><td>'
+          f'<td><pre>'
+          f'm3 s{spindle_rpm.m_as("rpm"):.0f}\n'
+          f'g0 z.1\n'
+          f'g1 f{plunge_feedrate.m_as("in / min"):.1f} z-{(depth + approach_distance).m_as("in"):.4f}\n'
+          f'g0 z.1'
+          f'</pre></td></tr>'
+          f'<tr><td>Metric expression</td><td>'
+          f'<td><pre>'
+          f'm3 s{spindle_rpm.m_as("rpm"):.0f}\n'
+          f'g0 z2.54\n'
+          f'g1 f{plunge_feedrate.m_as("mm / min"):.0f} z-[{depth.m_as("mm"):.3f}+{approach_distance.m_as("mm"):.3f}]\n'
+          f'g0 z2.54'
+          f'</pre></td></tr>'
+          f'<tr><td>Metric explicit</td><td>'
+          f'<td><pre>'
+          f'm3 s{spindle_rpm.m_as("rpm"):.0f}\n'
+          f'g0 z2.54\n'
+          f'g1 f{plunge_feedrate.m_as("mm / min"):.0f} z-{(depth + approach_distance).m_as("mm"):.3f}\n'
+          f'g0 z2.54'
+          f'</pre></td></tr>'
+          f'</tbody></table>'
+         )
+
     if True:
-        print('<p>')
+        print(f'<h3>Fusion 360 dialogs</h3>'
+              f'<p>')
         ss = f'{spindle_limited}\t{drill_diam.m_as("in"):.4f}in drill\t{spindle_rpm.m_as("rpm"):.0f} rpm\t{sfm.m_as("ft * rpm"):.2f} ft/min\t{plunge_feedrate.m_as("inch / minute"):.2f} in/min\t{feed_per_revolution.m_as("inch / turn"):.4f} in'
         ss = urllib.parse.quote_plus(ss)
         print(f'<img src="/machining_assistant/assistant.fcgi?operation=drilling&amp;graph=graph1&amp;args={ss}">')
@@ -524,7 +619,7 @@ def print_alternatives(m, mat, diam, tool, op, limits):
     print(f'<img src="/machining_assistant/assistant.fcgi?operation=drilling&amp;graph=graph7&amp;args={ss}">')
 
 
-def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
+def drill_assistant(m, material_name, drill_diam, depth, drill_angle, generate_graphs=False):
     stock_material = pm.Material(material_name)
     tool = pm.DrillHSSStub(drill_diam)
     op = pm.DrillOp(tool, stock_material)
@@ -567,9 +662,9 @@ def drill_assistant(m, material_name, drill_diam, depth, generate_graphs=False):
     if plunge_feedrate > max_plunge_feedrate:
         limits += ['plunge']
 
-    print_introduction(drill_diam, depth, material_name)
+    print_introduction(drill_diam, depth, material_name, drill_angle)
 
-    print_machining_parameters(m, spindle_limited, spindle_rpm, max_spindle_rpm, requested_spindle_rpm, feed_per_revolution, sfm, material_sfm, plunge_feedrate, max_plunge_feedrate, drill_diam, limits)
+    print_machining_parameters(m, spindle_limited, spindle_rpm, max_spindle_rpm, requested_spindle_rpm, feed_per_revolution, sfm, material_sfm, plunge_feedrate, max_plunge_feedrate, drill_diam, limits, drill_angle, depth)
 
     print_operation_analysis(depth, drill_diam, sfm, material_sfm, limits, spindle_rpm, requested_spindle_rpm)
 
@@ -775,6 +870,7 @@ def drill_assistant_main(env, form):
 
     d0['drill_diam'] = env['drill_diam'] if 'drill_diam' in env else None
     d0['hole_depth'] = env['hole_depth'] if 'hole_depth' in env else None
+    d0['drill_angle'] = env['drill_angle'] if 'drill_angle' in env else None
 
     d = dict(d0)
 
@@ -802,11 +898,18 @@ def drill_assistant_main(env, form):
         if 'in' not in d0['hole_depth'] and 'mm' not in d0['hole_depth']:
             d0['hole_depth'] += ' in'
 
+    try:
+        d['drill_angle'] = float(d['drill_angle'])
+    except (TypeError, ValueError):
+        d['drill_angle'] = 118
+
+
     if (d['machine'] is not None
             and d['stock_mat'] is not None
             and d['tool_mat'] is not None
             and d['drill_diam'] is not None
-            and d['hole_depth'] is not None):
+            and d['hole_depth'] is not None
+            and d['drill_angle'] is not None):
         print('<body>')
         drill_assistant_header(d0, d)
 
@@ -818,10 +921,11 @@ def drill_assistant_main(env, form):
             m = pm.MachinePM25MV_HS()
         else:
             m = None
+
         tool = d['drill_diam']
         depth = d['hole_depth']
         gen_graphs = False
-        drill_assistant(m, d['stock_mat'], tool, depth, gen_graphs)
+        drill_assistant(m, d['stock_mat'], tool, depth, d['drill_angle'], gen_graphs)
         print_amazon_links()
         print('</body>')
     else:

@@ -159,12 +159,12 @@ def application_main(environ, start_response):
         print('<html>')
         print_head()
         print_header()
-        try:
-            main(env, form)
-        except:
-            print('\n\n<pre>')
-            traceback.print_exc()
-            print('\n\n</pre>')
+        # try:
+        main(env, form)
+        # except:
+        #     print('\n\n<pre>')
+        #     traceback.print_exc()
+        #     print('\n\n</pre>')
         print_footer()
         print('</html>')
         html = sys.stdout.getvalue()
@@ -180,7 +180,7 @@ def application_main(environ, start_response):
 def application(environ, start_response):
     try:
         yield application_main(environ, start_response)
-    except Exception:
+    except:
         import traceback
         dn = 'exceptions'
         os.makedirs(dn, exist_ok=True)
@@ -233,7 +233,8 @@ def start_test(environ, start_response):
            'input_units': 'imperial',
            'output_units': 'imperial',
            'drill_diam': '0.25',
-           'hole_depth': '0.5'}
+           'hole_depth': '0.5',
+           'drill_angle': '118'}
     form = {}
 
     print('<html>')
