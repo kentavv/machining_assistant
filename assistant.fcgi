@@ -105,6 +105,7 @@ def print_head():
 
 def print_header():
     print('<h1>Machining Assistant</h1>')
+    print('<p>Given selection of operation, tool, and machine, these tools predict performance (load, material removal, etc.), show which Fusion360 parameters to set, generate g-code, and offer alternatives. A machine-aware performance-optimizing take on calculating speeds and feeds.</p>')
     print('<p>Return to <a href="assistant.fcgi">Machining Assistant</a> or <a href="https://kvvcreates.com">KvvCreates</a></p>')
 
 
