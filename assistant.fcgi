@@ -1,4 +1,4 @@
-#!/home/dh_6i8v7b/.local/share/virtualenvs/machining_assistant-5Q48g--X/bin/python
+#!/home/dh_2xqz9a/.local/share/virtualenvs/machining_assistant-UR6DSyD1/bin/python
 
 # import cgitb
 # cgitb.enable()
@@ -77,17 +77,19 @@ p { font-family: 'Inder', sans-serif; line-height: 28px; margin-bottom: 15px; }
 
 def print_head():
     print('<head>')
+    print('<meta charset="UTF-8">')
+    print('<meta name="viewport" content="width=device-width, initial-scale=1.0">')
     print('<title>Machining Assistant by KvvCreates, powered by PyMachining</title>')
     print_style()
-    print('<script data-ad-client="ca-pub-8377109266905414" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>')
-    print('<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.22/css/jquery.dataTables.css">')
+    # print('<script data-ad-client="ca-pub-8377109266905414" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>')
+    print('<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css">')
     print('''
         <script
-  src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
-  integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs="
-  crossorigin="anonymous"></script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.js"></script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/plug-ins/1.10.21/sorting/natural.js"></script>''')
+	  src="https://code.jquery.com/jquery-3.6.0.slim.min.js"
+	  integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI="
+	  crossorigin="anonymous"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/plug-ins/1.10.25/sorting/natural.js"></script>''')
     print('''<script>
         $(document).ready( function () {
     $("#alt_table").DataTable({
@@ -156,7 +158,7 @@ def application_main(environ, start_response):
         sys.stdout = io.StringIO()
         sys.stderr = sys.stdout
 
-        print('<html>')
+        print('<html lang="en">')
         print_head()
         print_header()
         # try:
@@ -237,7 +239,7 @@ def start_test(environ, start_response):
            'drill_angle': '118'}
     form = {}
 
-    print('<html>')
+    print('<html lang="en">')
     print_head()
     print_header()
 

@@ -1,4 +1,4 @@
-#!/home/dh_6i8v7b/.local/share/virtualenvs/pymachining-iAFu6bf3/bin/python
+#!/home/dh_2xqz9a/.local/share/virtualenvs/machining_assistant-UR6DSyD1/bin/python
 
 import random
 import urllib
@@ -8,6 +8,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import io
 import seaborn as sns
+
+import sys
+sys.path.append('../pymachining/')
 
 import pymachining as pm
 from helper import *
@@ -611,7 +614,7 @@ def print_alternatives(m, mat, diam, tool, op, limits):
               f' The "standard parameters" are not limited by the machine\'s capacity.'
               f' Greater productivity may be possible, at possible expense of tool life.</p>')
     print(f'<table class="styled-table" id="alt_table">'
-          f'<thead>'
+          f'<thead>\n'
           f'<tr>'
           f'<th>MRR (in^3/min)</th>',
           f'<th>% of Avail.<br>Power</th>'
@@ -620,8 +623,9 @@ def print_alternatives(m, mat, diam, tool, op, limits):
           f'<th>N (rpm)<br>% of {m.max_rpm.m_as("rpm"):.0f}</th>'
           f'<th>Zf (in/min)<br>% of {m.max_z_rate.m_as("in / min"):.0f}</th>'
           f'<th>Ff (lbs)<br>% of {m.max_feed_force.m_as("lbs"):.0f}</th>'
-          f'</tr>'
-          f'<tbody')
+          f'</tr>\n'
+          f'</thead>\n'
+          f'<tbody>')
 
     thrust = tool.thrust(mat)
     for xx in options2[:100]:
@@ -882,8 +886,7 @@ def print_amazon_links():
     print(f'<br><br><br>'
           f'<h2 id="section_ads">Favorite related tools</h2>'
           f'<p>{amazon_disclosure}<br>'
-          f'{amazon_links_drills[2]}<br>'
-          f'{amazon_links_drills[1]}</p>')
+          f'{amazon_links_drills[0]}</p>')
 
 
 def drill_assistant_graphs(env, form):
